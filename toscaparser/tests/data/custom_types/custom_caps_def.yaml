@@ -11,6 +11,11 @@ capability_types:
 
   tosca.capabilities.SomeChildCap:
     derived_from: tosca.capabilities.SomeCap
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
 
 node_types:
 

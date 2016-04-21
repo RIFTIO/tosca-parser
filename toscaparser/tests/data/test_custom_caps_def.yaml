@@ -11,3 +11,8 @@ topology_template:
 
     server:
       type: tosca.nodes.SomeNode
+      capabilities:
+        lrms:
+          properties:
+            id: 1
+            name: test
