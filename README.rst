@@ -9,6 +9,9 @@ The TOSCA Parser is an OpenStack project and licensed under Apache 2. It is
 developed to parse TOSCA Simple Profile in YAML. It reads the TOSCA templates
 and creates an in-memory graph of TOSCA nodes and their relationship.
 
+> *NOTE:* This is a forked version of tosca-parser with a specific fix till
+it is upstreamed to the OpenStack repo
+
 Architecture
 ------------
 
