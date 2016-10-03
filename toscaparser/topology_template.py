@@ -22,6 +22,7 @@ from toscaparser.parameters import Input
 from toscaparser.parameters import Output
 from toscaparser.policy import Policy
 from toscaparser.relationship_template import RelationshipTemplate
+from toscaparser.substitution_mappings import SubstitutionMappings
 from toscaparser.tpl_relationship_graph import ToscaGraph
 from toscaparser.utils.gettextutils import _
 
@@ -41,8 +42,10 @@ class TopologyTemplate(object):
 
     '''Load the template data.'''
     def __init__(self, template, custom_defs,
-                 rel_types=None, parsed_params=None):
+                 rel_types=None, parsed_params=None,
+                 sub_mapped_node_template=None):
         self.tpl = template
+        self.sub_mapped_node_template = sub_mapped_node_template
         if self.tpl:
             self.custom_defs = custom_defs
             self.rel_types = rel_types
@@ -58,6 +61,7 @@ class TopologyTemplate(object):
             self.groups = self._groups()
             self.policies = self._policies()
             self._process_intrinsic_functions()
+            self.substitution_mappings = self._substitution_mappings()
 
     def _inputs(self):
         inputs = []
@@ -65,6 +69,18 @@ class TopologyTemplate(object):
             input = Input(name, attrs)
             if self.parsed_params and name in self.parsed_params:
                 input.validate(self.parsed_params[name])
+            else:
+                default = input.default
+                if default:
+                    input.validate(default)
+            if (self.parsed_params and input.name not in self.parsed_params
+                or self.parsed_params is None) and input.required \
+                    and input.default is None:
+                exception.ExceptionCollector.appendException(
+                    exception.MissingRequiredParameterError(
+                        what='Template',
+                        input_name=input.name))
+
             inputs.append(input)
         return inputs
 
@@ -101,7 +117,15 @@ class TopologyTemplate(object):
         return outputs
 
     def _substitution_mappings(self):
-        pass
+        tpl_substitution_mapping = self._tpl_substitution_mappings()
+        # if tpl_substitution_mapping and self.sub_mapped_node_template:
+        if tpl_substitution_mapping:
+            return SubstitutionMappings(tpl_substitution_mapping,
+                                        self.nodetemplates,
+                                        self.inputs,
+                                        self.outputs,
+                                        self.sub_mapped_node_template,
+                                        self.custom_defs)
 
     def _policies(self):
         policies = []
@@ -129,7 +153,7 @@ class TopologyTemplate(object):
             if member_names is not None:
                 DataEntity.validate_datatype('list', member_names)
                 if len(member_names) < 1 or \
-                    len(member_names) != len(set(member_names)):
+                        len(member_names) != len(set(member_names)):
                     exception.ExceptionCollector.appendException(
                         exception.InvalidGroupTargetException(
                             message=_('Member nodes "%s" should be >= 1 '
@@ -173,13 +197,16 @@ class TopologyTemplate(object):
     # topology template can act like node template
     # it is exposed by substitution_mappings.
     def nodetype(self):
-        pass
+        return self.substitution_mappings.node_type \
+            if self.substitution_mappings else None
 
     def capabilities(self):
-        pass
+        return self.substitution_mappings.capabilities \
+            if self.substitution_mappings else None
 
     def requirements(self):
-        pass
+        return self.substitution_mappings.requirements \
+            if self.substitution_mappings else None
 
     def _tpl_description(self):
         description = self.tpl.get(DESCRIPTION)
@@ -265,7 +292,7 @@ class TopologyTemplate(object):
                             for interface in rel_tpl.interfaces:
                                 if interface.inputs:
                                     for name, value in \
-                                        interface.inputs.items():
+                                            interface.inputs.items():
                                         interface.inputs[name] = \
                                             functions.get_function(self,
                                                                    rel_tpl,
@@ -274,3 +301,9 @@ class TopologyTemplate(object):
             func = functions.get_function(self, self.outputs, output.value)
             if isinstance(func, functions.GetAttribute):
                 output.attrs[output.VALUE] = func
+
+    @classmethod
+    def get_sub_mapping_node_type(cls, topology_tpl):
+        if topology_tpl and isinstance(topology_tpl, dict):
+            submap_tpl = topology_tpl.get(SUBSTITUION_MAPPINGS)
+            return SubstitutionMappings.get_node_type(submap_tpl)

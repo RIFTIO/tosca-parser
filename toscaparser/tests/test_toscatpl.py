@@ -12,7 +12,6 @@
 
 import os
 import six
-
 from toscaparser.common import exception
 import toscaparser.elements.interfaces as ifaces
 from toscaparser.elements.nodetype import NodeType
@@ -27,16 +26,19 @@ import toscaparser.utils.yamlparser
 
 
 class ToscaTemplateTest(TestCase):
-
     '''TOSCA template.'''
     tosca_tpl = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         "data/tosca_single_instance_wordpress.yaml")
-    tosca = ToscaTemplate(tosca_tpl)
-
+    params = {'db_name': 'my_wordpress', 'db_user': 'my_db_user',
+              'db_root_pwd': '12345678'}
+    tosca = ToscaTemplate(tosca_tpl, parsed_params=params)
     tosca_elk_tpl = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         "data/tosca_elk.yaml")
+    tosca_repo_tpl = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "data/tosca_repositories_test_definition.yaml")
 
     def test_version(self):
         self.assertEqual(self.tosca.version, "tosca_simple_yaml_1_0")
@@ -135,6 +137,17 @@ class ToscaTemplateTest(TestCase):
                 self.assertEqual('Linux', os_props['type'].value)
                 self.assertEqual('Linux', os_type_prop)
 
+    def test_node_inheritance_type(self):
+        wordpress_node = [
+            node for node in self.tosca.nodetemplates
+            if node.name == 'wordpress'][0]
+        self.assertTrue(
+            wordpress_node.is_derived_from("tosca.nodes.WebApplication"))
+        self.assertTrue(
+            wordpress_node.is_derived_from("tosca.nodes.Root"))
+        self.assertFalse(
+            wordpress_node.is_derived_from("tosca.policies.Root"))
+
     def test_outputs(self):
         self.assertEqual(
             ['website_url'],
@@ -161,14 +174,14 @@ class ToscaTemplateTest(TestCase):
                 self.assertEqual(3, len(interface.inputs))
                 TestCase.skip(self, 'bug #1440247')
                 wp_db_port = interface.inputs['wp_db_port']
-                self.assertTrue(isinstance(wp_db_port, GetProperty))
+                self.assertIsInstance(wp_db_port, GetProperty)
                 self.assertEqual('get_property', wp_db_port.name)
                 self.assertEqual(['SELF',
                                   'database_endpoint',
                                   'port'],
                                  wp_db_port.args)
                 result = wp_db_port.result()
-                self.assertTrue(isinstance(result, GetInput))
+                self.assertIsInstance(result, GetInput)
             else:
                 raise AssertionError(
                     'Unexpected interface: {0}'.format(interface.name))
@@ -187,6 +200,7 @@ class ToscaTemplateTest(TestCase):
             compute_type = NodeType(tpl.type)
             self.assertEqual(
                 sorted(['tosca.capabilities.Container',
+                        'tosca.capabilities.Endpoint.Admin',
                         'tosca.capabilities.Node',
                         'tosca.capabilities.OperatingSystem',
                         'tosca.capabilities.network.Bindable',
@@ -212,6 +226,8 @@ class ToscaTemplateTest(TestCase):
                 for key in relation.keys():
                     rel_tpl = relation.get(key).get_relationship_template()
                     if rel_tpl:
+                        self.assertTrue(rel_tpl[0].is_derived_from(
+                            "tosca.relationships.Root"))
                         interfaces = rel_tpl[0].interfaces
                         for interface in interfaces:
                             self.assertEqual(config_interface,
@@ -236,6 +252,18 @@ class ToscaTemplateTest(TestCase):
                 self.assertEqual(
                     expected_hosts,
                     sorted([v.type for v in node_tpl.relationships.values()]))
+
+    def test_repositories(self):
+        template = ToscaTemplate(self.tosca_repo_tpl)
+        self.assertEqual(
+            ['repo_code0', 'repo_code1', 'repo_code2'],
+            sorted([input.name for input in template.repositories]))
+
+        input_name = "repo_code2"
+        expected_url = "https://github.com/nandinivemula/intern/master"
+        for input in template.repositories:
+            if input.name == input_name:
+                self.assertEqual(input.url, expected_url)
 
     def test_template_macro(self):
         template = ToscaTemplate(self.tosca_elk_tpl)
@@ -411,21 +439,30 @@ class ToscaTemplateTest(TestCase):
         tosca_tpl = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             "data/tosca_single_instance_wordpress.yaml")
-        tosca = ToscaTemplate(tosca_tpl)
+        params = {'db_name': 'my_wordpress', 'db_user': 'my_db_user',
+                  'db_root_pwd': '12345678'}
+        tosca = ToscaTemplate(tosca_tpl, parsed_params=params)
         self.assertTrue(tosca.topology_template.custom_defs)
 
     def test_local_template_with_url_import(self):
         tosca_tpl = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             "data/tosca_single_instance_wordpress_with_url_import.yaml")
-        tosca = ToscaTemplate(tosca_tpl)
+        tosca = ToscaTemplate(tosca_tpl,
+                              parsed_params={'db_root_pwd': '123456'})
         self.assertTrue(tosca.topology_template.custom_defs)
 
     def test_url_template_with_local_relpath_import(self):
         tosca_tpl = ('https://raw.githubusercontent.com/openstack/'
                      'tosca-parser/master/toscaparser/tests/data/'
                      'tosca_single_instance_wordpress.yaml')
-        tosca = ToscaTemplate(tosca_tpl, None, False)
+        tosca = ToscaTemplate(tosca_tpl, a_file=False,
+                              parsed_params={"db_name": "mysql",
+                                             "db_user": "mysql",
+                                             "db_root_pwd": "1234",
+                                             "db_pwd": "5678",
+                                             "db_port": 3306,
+                                             "cpus": 4})
         self.assertTrue(tosca.topology_template.custom_defs)
 
     def test_url_template_with_local_abspath_import(self):
@@ -446,19 +483,27 @@ class ToscaTemplateTest(TestCase):
         tosca_tpl = ('https://raw.githubusercontent.com/openstack/'
                      'tosca-parser/master/toscaparser/tests/data/'
                      'tosca_single_instance_wordpress_with_url_import.yaml')
-        tosca = ToscaTemplate(tosca_tpl, None, False)
+        tosca = ToscaTemplate(tosca_tpl, a_file=False,
+                              parsed_params={"db_root_pwd": "1234"})
         self.assertTrue(tosca.topology_template.custom_defs)
 
     def test_csar_parsing_wordpress(self):
         csar_archive = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             'data/CSAR/csar_wordpress.zip')
-        self.assertTrue(ToscaTemplate(csar_archive))
+        self.assertTrue(ToscaTemplate(csar_archive,
+                                      parsed_params={"db_name": "mysql",
+                                                     "db_user": "mysql",
+                                                     "db_root_pwd": "1234",
+                                                     "db_pwd": "5678",
+                                                     "db_port": 3306,
+                                                     "cpus": 4}))
 
     def test_csar_parsing_elk_url_based(self):
         csar_archive = ('https://github.com/openstack/tosca-parser/raw/master/'
                         'toscaparser/tests/data/CSAR/csar_elk.zip')
-        self.assertTrue(ToscaTemplate(csar_archive, None, False))
+        self.assertTrue(ToscaTemplate(csar_archive, a_file=False,
+                                      parsed_params={"my_cpus": 4}))
 
     def test_nested_imports_in_templates(self):
         tosca_tpl = os.path.join(
@@ -566,7 +611,7 @@ class ToscaTemplateTest(TestCase):
         tosca_tpl = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             "data/CSAR/csar_elk.csar")
-        tosca = ToscaTemplate(tosca_tpl)
+        tosca = ToscaTemplate(tosca_tpl, parsed_params={"my_cpus": 2})
         self.assertTrue(tosca.topology_template.custom_defs)
 
     def test_available_rel_tpls(self):
@@ -632,9 +677,10 @@ class ToscaTemplateTest(TestCase):
             "data/tosca_single_instance_wordpress.yaml")
 
         yaml_dict_tpl = toscaparser.utils.yamlparser.load_yaml(test_tpl)
-
+        params = {'db_name': 'my_wordpress', 'db_user': 'my_db_user',
+                  'db_root_pwd': '12345678'}
         self.assertRaises(exception.ValidationError, ToscaTemplate, None,
-                          None, False, yaml_dict_tpl)
+                          params, False, yaml_dict_tpl)
         err_msg = (_('Relative file name "custom_types/wordpress.yaml" '
                      'cannot be used in a pre-parsed input template.'))
         exception.ExceptionCollector.assertExceptionMessage(ImportError,
@@ -665,6 +711,8 @@ class ToscaTemplateTest(TestCase):
         tosca = ToscaTemplate(tosca_tpl)
 
         for policy in tosca.topology_template.policies:
+            self.assertTrue(
+                policy.is_derived_from("tosca.policies.Root"))
             if policy.name == 'my_compute_placement_policy':
                 self.assertEqual('tosca.policies.Placement', policy.type)
                 self.assertEqual(['my_server_1', 'my_server_2'],
@@ -685,6 +733,8 @@ class ToscaTemplateTest(TestCase):
         tosca = ToscaTemplate(tosca_tpl)
 
         for policy in tosca.topology_template.policies:
+            self.assertTrue(
+                policy.is_derived_from("tosca.policies.Root"))
             if policy.name == 'my_groups_placement':
                 self.assertEqual('mycompany.mytypes.myScalingPolicy',
                                  policy.type)
@@ -729,6 +779,8 @@ class ToscaTemplateTest(TestCase):
             "data/test_tosca_custom_rel_with_script.yaml")
         tosca = ToscaTemplate(tosca_tpl)
         rel = tosca.relationship_templates[0]
+        self.assertEqual(rel.type, "tosca.relationships.HostedOn")
+        self.assertTrue(rel.is_derived_from("tosca.relationships.Root"))
         self.assertEqual(len(rel.interfaces), 1)
         self.assertEqual(rel.interfaces[0].type, "Configure")
 
@@ -768,3 +820,21 @@ class ToscaTemplateTest(TestCase):
                     vmax='65534'))
         exception.ExceptionCollector.assertExceptionMessage(
             exception.RangeValueError, msg)
+
+    def test_containers(self):
+        tosca_tpl = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data/test_containers.yaml")
+        ToscaTemplate(tosca_tpl, parsed_params={"mysql_root_pwd": "12345678"})
+
+    def test_endpoint_on_compute(self):
+        tosca_tpl = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data/test_endpoint_on_compute.yaml")
+        ToscaTemplate(tosca_tpl)
+
+    def test_nested_dsl_def(self):
+        tosca_tpl = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data/dsl_definitions/test_nested_dsl_def.yaml")
+        self.assertIsNotNone(ToscaTemplate(tosca_tpl))

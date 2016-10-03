@@ -91,7 +91,10 @@ class DataEntity(object):
 
             # check every field
             for name, value in list(self.value.items()):
-                prop_schema = Schema(name, self._find_schema(name))
+                schema_name = self._find_schema(name)
+                if not schema_name:
+                    continue
+                prop_schema = Schema(name, schema_name)
                 # check if field value meets type defined
                 DataEntity.validate_datatype(prop_schema.type, value,
                                              prop_schema.entry_schema,
@@ -119,6 +122,9 @@ class DataEntity(object):
         If type is list or map, validate its entry by entry_schema(if defined)
         If type is a user-defined complex datatype, custom_def is required.
         '''
+        from toscaparser.functions import is_function
+        if is_function(value):
+            return value
         if type == Schema.STRING:
             return validateutils.validate_string(value)
         elif type == Schema.INTEGER:

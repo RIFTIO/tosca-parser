@@ -60,6 +60,7 @@ class ToscaDefTest(TestCase):
 
     def test_group(self):
         self.assertEqual(group_type.type, "tosca.groups.Root")
+        self.assertEqual(group_type.parent_type, None)
         self.assertIn(ifaces.LIFECYCLE_SHORTNAME, group_type.interfaces)
 
     def test_capabilities(self):
@@ -70,6 +71,7 @@ class ToscaDefTest(TestCase):
         # we SHOULD test symbolic capability names as well
         self.assertEqual(
             ['tosca.capabilities.Container',
+             'tosca.capabilities.Endpoint.Admin',
              'tosca.capabilities.Node',
              'tosca.capabilities.OperatingSystem',
              'tosca.capabilities.Scalable',
@@ -188,8 +190,9 @@ class ToscaDefTest(TestCase):
         self.assertIn(ifaces.LIFECYCLE_SHORTNAME, root_node.interfaces)
 
     def test_artifacts(self):
+        self.assertEqual(artif_root_type.parent_type, None)
         self.assertEqual('tosca.artifacts.Root',
-                         artif_file_type.parent_type)
+                         artif_file_type.parent_type.type)
         self.assertEqual({}, artif_file_type.parent_artifacts)
         self.assertEqual(sorted(['tosca.artifacts.Root'],
                                 key=lambda x: str(x)),
@@ -198,7 +201,7 @@ class ToscaDefTest(TestCase):
                                 key=lambda x: str(x)))
 
         self.assertEqual('tosca.artifacts.Implementation',
-                         artif_bash_type.parent_type)
+                         artif_bash_type.parent_type.type)
         self.assertEqual({'tosca.artifacts.Implementation':
                           {'derived_from': 'tosca.artifacts.Root',
                            'description':
@@ -212,7 +215,7 @@ class ToscaDefTest(TestCase):
                                 key=lambda x: str(x)))
 
         self.assertEqual('tosca.artifacts.Implementation',
-                         artif_python_type.parent_type)
+                         artif_python_type.parent_type.type)
         self.assertEqual({'tosca.artifacts.Implementation':
                           {'derived_from': 'tosca.artifacts.Root',
                            'description':
@@ -227,7 +230,7 @@ class ToscaDefTest(TestCase):
                                 key=lambda x: str(x)))
 
         self.assertEqual('tosca.artifacts.Deployment.Image',
-                         artif_container_docker_type.parent_type)
+                         artif_container_docker_type.parent_type.type)
         self.assertEqual({'tosca.artifacts.Deployment':
                           {'derived_from': 'tosca.artifacts.Root',
                            'description':
@@ -244,7 +247,7 @@ class ToscaDefTest(TestCase):
                                 key=lambda x: str(x)))
 
         self.assertEqual('tosca.artifacts.Deployment.Image',
-                         artif_vm_iso_type.parent_type)
+                         artif_vm_iso_type.parent_type.type)
         self.assertEqual({'tosca.artifacts.Deployment':
                           {'derived_from': 'tosca.artifacts.Root',
                            'description':
@@ -263,7 +266,7 @@ class ToscaDefTest(TestCase):
                                 key=lambda x: str(x)))
 
         self.assertEqual('tosca.artifacts.Deployment.Image',
-                         artif_vm_qcow2_type.parent_type)
+                         artif_vm_qcow2_type.parent_type.type)
         self.assertEqual({'tosca.artifacts.Deployment':
                           {'derived_from': 'tosca.artifacts.Root',
                            'description':
@@ -282,8 +285,9 @@ class ToscaDefTest(TestCase):
                                 key=lambda x: str(x)))
 
     def test_policies(self):
+        self.assertEqual(policy_root_type.parent_type, None)
         self.assertEqual('tosca.policies.Root',
-                         policy_placement_type.parent_type)
+                         policy_placement_type.parent_type.type)
         self.assertEqual({}, policy_placement_type.parent_policies)
         self.assertEqual(sorted(['tosca.policies.Root',
                                  'The TOSCA Policy Type definition that is '
@@ -295,7 +299,7 @@ class ToscaDefTest(TestCase):
                                 key=lambda x: str(x)))
 
         self.assertEqual('tosca.policies.Root',
-                         policy_scaling_type.parent_type)
+                         policy_scaling_type.parent_type.type)
         self.assertEqual({}, policy_scaling_type.parent_policies)
         self.assertEqual(sorted(['tosca.policies.Root',
                                  'The TOSCA Policy Type definition that is '
@@ -307,7 +311,7 @@ class ToscaDefTest(TestCase):
                                 key=lambda x: str(x)))
 
         self.assertEqual('tosca.policies.Root',
-                         policy_update_type.parent_type)
+                         policy_update_type.parent_type.type)
         self.assertEqual({}, policy_update_type.parent_policies)
         self.assertEqual(sorted(['tosca.policies.Root',
                                  'The TOSCA Policy Type definition that is '
@@ -319,7 +323,7 @@ class ToscaDefTest(TestCase):
                                 key=lambda x: str(x)))
 
         self.assertEqual('tosca.policies.Root',
-                         policy_performance_type.parent_type)
+                         policy_performance_type.parent_type.type)
         self.assertEqual({}, policy_performance_type.parent_policies)
         self.assertEqual(sorted(['tosca.policies.Root',
                                  'The TOSCA Policy Type definition that is '

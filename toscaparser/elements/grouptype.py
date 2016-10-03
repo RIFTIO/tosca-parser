@@ -52,6 +52,15 @@ class GroupType(StatefulEntityType):
             self._validate_metadata(self.meta_data)
 
     @property
+    def parent_type(self):
+        '''Return a group statefulentity of this entity is derived from.'''
+        if not hasattr(self, 'defs'):
+            return None
+        pgroup_entity = self.derived_from(self.defs)
+        if pgroup_entity:
+            return GroupType(pgroup_entity, self.custom_def)
+
+    @property
     def description(self):
         return self.group_description
 
@@ -78,7 +87,7 @@ class GroupType(StatefulEntityType):
                                  'metadata' % (meta_data.get('type'))))
         for entry_schema, entry_schema_type in meta_data.items():
             if isinstance(entry_schema_type, dict) and not \
-                entry_schema_type.get('type') == 'string':
+                    entry_schema_type.get('type') == 'string':
                 ExceptionCollector.appendException(
                     InvalidTypeError(what='"%s" defined in group for '
                                      'metadata "%s"'

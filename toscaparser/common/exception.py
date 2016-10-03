@@ -67,6 +67,11 @@ class TOSCAException(Exception):
             TOSCAException._FATAL_EXCEPTION_FORMAT_ERRORS = flag
 
 
+class UnsupportedTypeError(TOSCAException):
+    msg_fmt = _('Type "%(what)s" is valid TOSCA type'
+                ' but not supported at this time.')
+
+
 class MissingRequiredFieldError(TOSCAException):
     msg_fmt = _('%(what)s is missing required field "%(required)s".')
 
@@ -107,6 +112,11 @@ class ValidationError(TOSCAException):
 
 class UnknownInputError(TOSCAException):
     msg_fmt = _('Unknown input "%(input_name)s".')
+
+
+class MissingRequiredParameterError(TOSCAException):
+    msg_fmt = _('%(what)s is missing required parameter for input: '
+                '"%(input_name)s".')
 
 
 class InvalidPropertyValueError(TOSCAException):

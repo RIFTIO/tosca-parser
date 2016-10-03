@@ -20,12 +20,12 @@ from toscaparser.parameters import Input
 from toscaparser.parameters import Output
 from toscaparser.policy import Policy
 from toscaparser.relationship_template import RelationshipTemplate
+from toscaparser.repositories import Repository
 from toscaparser.tests.base import TestCase
 from toscaparser.topology_template import TopologyTemplate
 from toscaparser.tosca_template import ToscaTemplate
 from toscaparser.triggers import Triggers
 from toscaparser.utils.gettextutils import _
-
 import toscaparser.utils.yamlparser
 
 
@@ -35,7 +35,9 @@ class ToscaTemplateValidationTest(TestCase):
         tpl_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             "data/tosca_single_instance_wordpress.yaml")
-        self.assertIsNotNone(ToscaTemplate(tpl_path))
+        params = {'db_name': 'my_wordpress', 'db_user': 'my_db_user',
+                  'db_root_pwd': '12345678'}
+        self.assertIsNotNone(ToscaTemplate(tpl_path, params))
 
     def test_first_level_sections(self):
         tpl_path = os.path.join(
@@ -97,24 +99,74 @@ class ToscaTemplateValidationTest(TestCase):
             _('Policy "mycompany.mytypes.myScalingPolicy" contains unknown '
               'field "derived1_from". Refer to the definition to '
               'verify valid values.'))
+        exception.ExceptionCollector.assertExceptionMessage(
+            exception.UnknownFieldError,
+            _('Relationshiptype "test.relation.connects" contains unknown '
+              'field "derived_from4". Refer to the definition to '
+              'verify valid values.'))
+
+    def test_unsupported_type(self):
+        tpl_snippet = '''
+        node_templates:
+          invalid_type:
+            type: tosca.test.invalidtype
+            properties:
+              size: { get_input: storage_size }
+              snapshot_id: { get_input: storage_snapshot_id }
+        '''
+        tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
+        err = self.assertRaises(exception.UnsupportedTypeError,
+                                TopologyTemplate, tpl, None)
+        expectedmessage = _('Type "tosca.test.invalidtype" is valid'
+                            ' TOSCA type but not supported at this time.')
+        self.assertEqual(expectedmessage, err.__str__())
 
     def test_inputs(self):
-        tpl_snippet = '''
+        tpl_snippet1 = '''
         inputs:
           cpus:
             type: integer
             description: Number of CPUs for the server.
             constraint:
-              - valid_values: [ 1, 2, 4, 8 ]
+              - valid_values: [ 1, 2, 4 ]
+            required: yes
+            status: supported
         '''
-        inputs = (toscaparser.utils.yamlparser.
-                  simple_parse(tpl_snippet)['inputs'])
-        name, attrs = list(inputs.items())[0]
-        input = Input(name, attrs)
-        err = self.assertRaises(exception.UnknownFieldError, input.validate)
-        self.assertEqual(_('Input "cpus" contains unknown field "constraint". '
-                           'Refer to the definition to verify valid values.'),
-                         err.__str__())
+        tpl_snippet2 = '''
+        inputs:
+          cpus:
+            type: integer
+            description: Number of CPUs for the server.
+            constraints:
+              - valid_values: [ 1, 2, 4 ]
+            required: yes
+            status: supported
+        '''
+        tpl_snippet3 = '''
+        inputs:
+          some_list:
+            type: list
+            description: List of items
+            entry_schema:
+              type: string
+            default: []
+        '''
+        inputs1 = (toscaparser.utils.yamlparser.
+                   simple_parse(tpl_snippet1)['inputs'])
+        name1, attrs1 = list(inputs1.items())[0]
+        inputs2 = (toscaparser.utils.yamlparser.
+                   simple_parse(tpl_snippet2)['inputs'])
+        name2, attrs2 = list(inputs2.items())[0]
+        try:
+            Input(name1, attrs1)
+        except Exception as err:
+            self.assertEqual(_('Input "cpus" contains unknown field '
+                               '"constraint". Refer to the definition to '
+                               'verify valid values.'),
+                             err.__str__())
+        input2 = Input(name2, attrs2)
+        self.assertTrue(input2.required)
+        toscaparser.utils.yamlparser.simple_parse(tpl_snippet3)['inputs']
 
     def _imports_content_test(self, tpl_snippet, path, custom_type_def):
         imports = (toscaparser.utils.yamlparser.
@@ -329,11 +381,118 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
         try:
             output.validate()
         except Exception as err:
-            self.assertTrue(isinstance(err, exception.UnknownFieldError))
+            self.assertIsInstance(err, exception.UnknownFieldError)
             self.assertEqual(_('Output "server_address" contains unknown '
                                'field "descriptions". Refer to the definition '
                                'to verify valid values.'),
                              err.__str__())
+
+    def _repo_content(self, path):
+        repositories = path['repositories']
+        reposit = []
+        for name, val in repositories.items():
+            reposits = Repository(name, val)
+            reposit.append(reposits)
+        return reposit
+
+    def test_repositories(self):
+        tpl_snippet = '''
+        repositories:
+           repo_code0: https://raw.githubusercontent.com/nandinivemula/intern
+           repo_code1:
+              description: My project's code Repository in github usercontent.
+              url: https://github.com/nandinivemula/intern
+              credential:
+                 user: nandini
+                 password: tcs@12345
+           repo_code2:
+              description: My Project's code Repository in github.
+              url: https://github.com/nandinivemula/intern
+              credential:
+                 user: xyzw
+                 password: xyz@123
+        '''
+        tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
+        repoobject = self._repo_content(tpl)
+        actualrepo_names = []
+        for repo in repoobject:
+            repos = repo.name
+            actualrepo_names.append(repos)
+        reposname = list(tpl.values())
+        reposnames = reposname[0]
+        expected_reponames = list(reposnames.keys())
+        self.assertEqual(expected_reponames, actualrepo_names)
+
+    def test_repositories_with_missing_required_field(self):
+        tpl_snippet = '''
+        repositories:
+           repo_code0: https://raw.githubusercontent.com/nandinivemula/intern
+           repo_code1:
+              description: My project's code Repository in github usercontent.
+              credential:
+                 user: nandini
+                 password: tcs@12345
+           repo_code2:
+              description: My Project's code Repository in github.
+              url: https://github.com/nandinivemula/intern
+              credential:
+                 user: xyzw
+                 password: xyz@123
+        '''
+        tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
+        err = self.assertRaises(exception.MissingRequiredFieldError,
+                                self._repo_content, tpl)
+        expectedmessage = _('Repository "repo_code1" is missing '
+                            'required field "url".')
+        self.assertEqual(expectedmessage, err.__str__())
+
+    def test_repositories_with_unknown_field(self):
+        tpl_snippet = '''
+        repositories:
+           repo_code0: https://raw.githubusercontent.com/nandinivemula/intern
+           repo_code1:
+              description: My project's code Repository in github usercontent.
+              url: https://github.com/nandinivemula/intern
+              credential:
+                 user: nandini
+                 password: tcs@12345
+           repo_code2:
+              descripton: My Project's code Repository in github.
+              url: https://github.com/nandinivemula/intern
+              credential:
+                 user: xyzw
+                 password: xyz@123
+        '''
+        tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
+        err = self.assertRaises(exception.UnknownFieldError,
+                                self._repo_content, tpl)
+        expectedmessage = _('repositories "repo_code2" contains unknown field'
+                            ' "descripton". Refer to the definition to verify'
+                            ' valid values.')
+        self.assertEqual(expectedmessage, err.__str__())
+
+    def test_repositories_with_invalid_url(self):
+        tpl_snippet = '''
+        repositories:
+           repo_code0: https://raw.githubusercontent.com/nandinivemula/intern
+           repo_code1:
+              description: My project's code Repository in github usercontent.
+              url: h
+              credential:
+                 user: nandini
+                 password: tcs@12345
+           repo_code2:
+              description: My Project's code Repository in github.
+              url: https://github.com/nandinivemula/intern
+              credential:
+                 user: xyzw
+                 password: xyz@123
+        '''
+        tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
+        err = self.assertRaises(exception.URLException,
+                                self._repo_content, tpl)
+        expectedmessage = _('repsositories "repo_code1" Invalid Url')
+        self.assertEqual(expectedmessage, err.__str__())
 
     def test_groups(self):
         tpl_snippet = '''
@@ -1379,3 +1538,66 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
             exception.MissingRequiredFieldError,
             lambda: Policy(name, policies[name], None, None))
         self.assertEqual(expectedmessage, err.__str__())
+
+    def test_credential_datatype(self):
+        tosca_tpl = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data/test_credential_datatype.yaml")
+        self.assertIsNotNone(ToscaTemplate(tosca_tpl))
+
+    def test_invalid_default_value(self):
+        tpl_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data/test_invalid_input_defaults.yaml")
+        self.assertRaises(exception.ValidationError, ToscaTemplate, tpl_path)
+        exception.ExceptionCollector.assertExceptionMessage(
+            ValueError, _('"two" is not an integer.'))
+
+    def test_invalid_capability(self):
+        tpl_snippet = '''
+        node_templates:
+          server:
+            type: tosca.nodes.Compute
+            capabilities:
+                oss:
+                    properties:
+                        architecture: x86_64
+        '''
+        tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
+        err = self.assertRaises(exception.UnknownFieldError,
+                                TopologyTemplate, tpl, None)
+        expectedmessage = _('"capabilities" of template "server" contains '
+                            'unknown field "oss". Refer to the definition '
+                            'to verify valid values.')
+        self.assertEqual(expectedmessage, err.__str__())
+
+    def test_qualified_name(self):
+        tpl_snippet_full_name = '''
+        node_templates:
+          supported_type:
+            type: tosca.nodes.Compute
+        '''
+        tpl = (
+            toscaparser.utils.yamlparser.simple_parse(
+                tpl_snippet_full_name))
+        TopologyTemplate(tpl, None)
+
+        tpl_snippet_short_name = '''
+        node_templates:
+          supported_type:
+            type: Compute
+        '''
+        tpl = (
+            toscaparser.utils.yamlparser.simple_parse(
+                tpl_snippet_short_name))
+        TopologyTemplate(tpl, None)
+
+        tpl_snippet_qualified_name = '''
+        node_templates:
+          supported_type:
+            type: tosca:Compute
+        '''
+        tpl = (
+            toscaparser.utils.yamlparser.simple_parse(
+                tpl_snippet_qualified_name))
+        TopologyTemplate(tpl, None)

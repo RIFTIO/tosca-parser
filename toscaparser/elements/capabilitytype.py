@@ -24,6 +24,7 @@ class CapabilityTypeDef(StatefulEntityType):
                                                 custom_def)
         self.nodetype = ntype
         self.properties = None
+        self.custom_def = custom_def
         if self.PROPERTIES in self.defs:
             self.properties = self.defs[self.PROPERTIES]
         self.parent_capabilities = self._get_parent_capabilities(custom_def)
@@ -46,7 +47,7 @@ class CapabilityTypeDef(StatefulEntityType):
                 for prop, schema in props.items():
                     # add parent property if not overridden by children type
                     if not self.properties or \
-                        prop not in self.properties.keys():
+                            prop not in self.properties.keys():
                         properties.append(PropertyDef(prop, None, schema))
         return properties
 
@@ -65,6 +66,7 @@ class CapabilityTypeDef(StatefulEntityType):
         capabilities = {}
         parent_cap = self.parent_type
         if parent_cap:
+            parent_cap = parent_cap.type
             while parent_cap != self.TOSCA_TYPEURI_CAPABILITY_ROOT:
                 if parent_cap in self.TOSCA_DEF.keys():
                     capabilities[parent_cap] = self.TOSCA_DEF[parent_cap]
@@ -76,4 +78,9 @@ class CapabilityTypeDef(StatefulEntityType):
     @property
     def parent_type(self):
         '''Return a capability this capability is derived from.'''
-        return self.derived_from(self.defs)
+        if not hasattr(self, 'defs'):
+            return None
+        pnode = self.derived_from(self.defs)
+        if pnode:
+            return CapabilityTypeDef(self.name, pnode,
+                                     self.nodetype, self.custom_def)

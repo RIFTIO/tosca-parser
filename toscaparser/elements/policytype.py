@@ -28,6 +28,7 @@ class PolicyType(StatefulEntityType):
         super(PolicyType, self).__init__(ptype, self.POLICY_PREFIX,
                                          custom_def)
         self.type = ptype
+        self.custom_def = custom_def
         self._validate_keys()
 
         self.meta_data = None
@@ -55,7 +56,7 @@ class PolicyType(StatefulEntityType):
 
     def _get_parent_policies(self):
         policies = {}
-        parent_policy = self.parent_type
+        parent_policy = self.parent_type.type if self.parent_type else None
         if parent_policy:
             while parent_policy != 'tosca.policies.Root':
                 policies[parent_policy] = self.TOSCA_DEF[parent_policy]
@@ -64,8 +65,12 @@ class PolicyType(StatefulEntityType):
 
     @property
     def parent_type(self):
-        '''Return a policy this policy is derived from.'''
-        return self.derived_from(self.defs)
+        '''Return a policy statefulentity of this node is derived from.'''
+        if not hasattr(self, 'defs'):
+            return None
+        ppolicy_entity = self.derived_from(self.defs)
+        if ppolicy_entity:
+            return PolicyType(ppolicy_entity, self.custom_def)
 
     def get_policy(self, name):
         '''Return the definition of a policy field by name.'''
@@ -107,7 +112,7 @@ class PolicyType(StatefulEntityType):
 
         for entry_schema, entry_schema_type in meta_data.items():
             if isinstance(entry_schema_type, dict) and not \
-                entry_schema_type.get('type') == 'string':
+                    entry_schema_type.get('type') == 'string':
                 ExceptionCollector.appendException(
                     InvalidTypeError(what='"%s" defined in policy for '
                                      'metadata "%s"'
