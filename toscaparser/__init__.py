@@ -12,8 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import pbr.version
+# Commenting out getting version as rw at the end seems to cause an error
+# import pbr.version
 
 
-__version__ = pbr.version.VersionInfo(
-    'tosca-parser').version_string()
+# __version__ = pbr.version.VersionInfo(
+#     'tosca-parser').version_string()
