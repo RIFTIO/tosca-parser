@@ -10,10 +10,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
 from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import InvalidSchemaError
 from toscaparser.common.exception import TOSCAException
 from toscaparser.utils.gettextutils import _
+
+log = logging.getLogger("tosca-parser")
 
 
 class PropertyDef(object):
@@ -42,6 +46,7 @@ class PropertyDef(object):
 
         # Validate required 'type' property exists
         try:
+            log.debug("Property: {}".format(self.schema))
             self.schema['type']
         except KeyError:
             msg = (_('Schema definition of "%(pname)s" must have a "type" '

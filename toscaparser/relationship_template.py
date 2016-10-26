@@ -21,7 +21,7 @@ SECTIONS = (DERIVED_FROM, PROPERTIES, REQUIREMENTS,
            ('derived_from', 'properties', 'requirements', 'interfaces',
             'capabilities', 'type')
 
-log = logging.getLogger('tosca')
+log = logging.getLogger('tosca-parser')
 
 
 class RelationshipTemplate(EntityTemplate):

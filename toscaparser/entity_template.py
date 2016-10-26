@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
 from toscaparser.capabilities import Capability
 from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import MissingRequiredFieldError
@@ -23,6 +25,8 @@ from toscaparser.elements.relationshiptype import RelationshipType
 from toscaparser.properties import Property
 from toscaparser.unsupportedtype import UnsupportedType
 from toscaparser.utils.gettextutils import _
+
+log = logging.getLogger("tosca-parser")
 
 
 class EntityTemplate(object):
@@ -165,7 +169,7 @@ class EntityTemplate(object):
                     if 'properties' in props and props['properties']:
                         properties.update(props['properties'])
 
-                    cap = Capability(name, properties, c)
+                    cap = Capability(name, properties, c, custom_def=self.custom_def)
                     capability.append(cap)
         return capability
 
@@ -185,11 +189,13 @@ class EntityTemplate(object):
             self._validate_capabilities_properties(capabilities)
 
     def _validate_capabilities_properties(self, capabilities):
+        log.debug("Capabilities: {}".format(capabilities))
         for cap, props in capabilities.items():
             capability = self.get_capability(cap)
             if not capability:
                 continue
             capabilitydef = capability.definition
+            log.debug("Capability def {}: {}".format(capabilitydef.name, props))
             self._common_validate_properties(capabilitydef,
                                              props[self.PROPERTIES])
 

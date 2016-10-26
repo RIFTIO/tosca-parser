@@ -22,7 +22,7 @@ from toscaparser.elements.entity_type import EntityType
 from toscaparser.utils.gettextutils import _
 
 
-log = logging.getLogger('tosca')
+log = logging.getLogger('tosca-parser')
 
 
 class Input(object):
@@ -70,14 +70,17 @@ class Input(object):
     def _validate_field(self):
         for name in self.schema.schema:
             if name not in self.INPUTFIELD:
+                log.error("Unknown input field {}: {}".
+                          format(self.name, name))
                 ExceptionCollector.appendException(
                     UnknownFieldError(what='Input "%s"' % self.name,
                                       field=name))
 
     def validate_type(self, input_type):
         if input_type not in Schema.PROPERTY_TYPES:
+            log.error("Invalid type {}: {}".format(self.name, input_type))
             ExceptionCollector.appendException(
-                ValueError(_('Invalid type "%s".') % type))
+                ValueError(_('Invalid type "%s".') % input_type))
 
     # TODO(anyone) Need to test for any built-in datatype not just network
     # that is, tosca.datatypes.* and not assume tosca.datatypes.network.*
@@ -87,8 +90,8 @@ class Input(object):
         datatype = None
         if self.type in tosca:
             datatype = tosca[self.type]
-        elif EntityType.DATATYPE_NETWORK_PREFIX + self.type in tosca:
-            datatype = tosca[EntityType.DATATYPE_NETWORK_PREFIX + self.type]
+        elif EntityType.DATATYPE_PREFIX + self.type in tosca:
+            datatype = tosca[EntityType.DATATYPE_PREFIX + self.type]
 
         DataEntity.validate_datatype(self.type, value, None, datatype)
 
@@ -114,15 +117,21 @@ class Output(object):
 
     def _validate_field(self):
         if not isinstance(self.attrs, dict):
+            log.info("Missing field output {}: {}".
+                     format(self.name, self.VALUE))
             ExceptionCollector.appendException(
                 MissingRequiredFieldError(what='Output "%s"' % self.name,
                                           required=self.VALUE))
         if self.value is None:
+            log.info("Missing field output {}: {}".
+                     format(self.name, self.VALUE))
             ExceptionCollector.appendException(
                 MissingRequiredFieldError(what='Output "%s"' % self.name,
                                           required=self.VALUE))
         for name in self.attrs:
             if name not in self.OUTPUTFIELD:
+                log.info("Unknown field output {}: {}".
+                         format(self.name, name))
                 ExceptionCollector.appendException(
                     UnknownFieldError(what='Output "%s"' % self.name,
                                       field=name))

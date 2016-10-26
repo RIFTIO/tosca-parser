@@ -13,12 +13,13 @@
 import copy
 import logging
 import os
+
 from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import ValidationError
 from toscaparser.extensions.exttools import ExtTools
 import toscaparser.utils.yamlparser
 
-log = logging.getLogger('tosca')
+log = logging.getLogger('tosca-parser')
 
 
 class EntityType(object):
@@ -93,6 +94,8 @@ class EntityType(object):
             return False
 
     def entity_value(self, defs, key):
+        if defs is None:
+            return None
         if key in defs:
             return defs[key]
 
@@ -102,6 +105,8 @@ class EntityType(object):
             if not hasattr(self, 'defs'):
                 return None
             defs = self.defs
+            if defs is None:
+                return None
         if ndtype in defs:
             # copy the value to avoid that next operations add items in the
             # item definitions
@@ -110,7 +115,7 @@ class EntityType(object):
             p = self
             if p:
                 while p:
-                    if ndtype in p.defs:
+                    if p.defs and ndtype in p.defs:
                         # get the parent value
                         parent_value = p.defs[ndtype]
                         if value:

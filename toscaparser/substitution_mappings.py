@@ -18,7 +18,7 @@ from toscaparser.common.exception import MissingRequiredFieldError
 from toscaparser.common.exception import UnknownFieldError
 
 
-log = logging.getLogger('tosca')
+log = logging.getLogger('tosca-parser')
 
 
 class SubstitutionMappings(object):
@@ -135,13 +135,25 @@ class SubstitutionMappings(object):
         tpls_requirements = self.sub_mapping_def.get(self.REQUIREMENTS)
         node_requirements = self.sub_mapped_node_template.requirements \
             if self.sub_mapped_node_template else None
+        log.debug("tpls req: {}, node req: {}".format(tpls_requirements, node_requirements))
         for req in node_requirements if node_requirements else []:
-            if (tpls_requirements and
-                    req not in list(tpls_requirements.keys())):
-                pass
-                # ExceptionCollector.appendException(
-                #    UnknownFieldError(what='SubstitutionMappings',
-                #                      field=req))
+            log.debug("Node requirements: {}".format(req))
+            if tpls_requirements:
+                keys = [];
+                if isinstance(tpls_requirements, list):
+                    for tp in tpls_requirements:
+                        keys.extend(list(tp.keys()))
+                else:
+                    keys = list(tpls_requirements.keys())
+                log.debug("Tpl keys: {}".format(keys))
+                for req_key in req.keys():
+                    if req_key in keys:
+                        pass
+                    else:
+                        log.info("Unknown field Subs: {}".format(req))
+                        ExceptionCollector.appendException(
+                            UnknownFieldError(what='SubstitutionMappings',
+                                              field=req))
 
     def _validate_outputs(self):
         """validate the outputs of substitution mappings."""

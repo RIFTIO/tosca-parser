@@ -12,6 +12,7 @@
 
 import collections
 import datetime
+import logging
 import re
 
 import toscaparser
@@ -21,6 +22,8 @@ from toscaparser.common.exception import ValidationError
 from toscaparser.elements.portspectype import PortSpec
 from toscaparser.elements import scalarunit
 from toscaparser.utils.gettextutils import _
+
+log = logging.getLogger("tosca-parser")
 
 
 class Schema(collections.Mapping):
@@ -59,6 +62,7 @@ class Schema(collections.Mapping):
             ExceptionCollector.appendException(InvalidSchemaError(message=msg))
 
         try:
+            log.debug("Schema dict: {}".format(schema_dict))
             schema_dict['type']
         except KeyError:
             msg = (_('Schema definition of "%(pname)s" must have a "type" '
@@ -141,14 +145,16 @@ class Constraint(object):
             ExceptionCollector.appendException(
                 InvalidSchemaError(message=_('Invalid constraint schema.')))
 
+        log.debug("Constraint: {}".format(constraint))
+        ConstraintClass = None
         for type in constraint.keys():
             ConstraintClass = get_constraint_class(type)
             if not ConstraintClass:
                 msg = _('Invalid property "%s".') % type
                 ExceptionCollector.appendException(
                     InvalidSchemaError(message=msg))
-
-        return ConstraintClass(property_name, property_type, constraint)
+        if ConstraintClass:
+            return ConstraintClass(property_name, property_type, constraint)
 
     def __init__(self, property_name, property_type, constraint):
         self.property_name = property_name

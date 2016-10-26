@@ -24,7 +24,7 @@ SECTIONS = (TYPE, METADATA, DESCRIPTION, PROPERTIES, TARGETS, TRIGGERS) = \
            ('type', 'metadata', 'description',
             'properties', 'targets', 'triggers')
 
-log = logging.getLogger('tosca')
+log = logging.getLogger('tosca-parser')
 
 
 class Policy(EntityTemplate):
@@ -72,6 +72,7 @@ class Policy(EntityTemplate):
     def _validate_keys(self):
         for key in self.entity_tpl.keys():
             if key not in SECTIONS:
+                log.info("Unknown field Policy {}: {}".format(self.name, key))
                 ExceptionCollector.appendException(
                     UnknownFieldError(what='Policy "%s"' % self.name,
                                       field=key))

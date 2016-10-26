@@ -35,7 +35,7 @@ SECTIONS = (DESCRIPTION, INPUTS, NODE_TEMPLATES,
             'relationship_templates', 'outputs', 'groups',
             'substitution_mappings', 'policies')
 
-log = logging.getLogger("tosca.model")
+log = logging.getLogger("tosca-parser")
 
 
 class TopologyTemplate(object):
@@ -66,6 +66,7 @@ class TopologyTemplate(object):
     def _inputs(self):
         inputs = []
         for name, attrs in self._tpl_inputs().items():
+            log.debug("Input {}: {}".format(name, attrs))
             input = Input(name, attrs)
             if self.parsed_params and name in self.parsed_params:
                 input.validate(self.parsed_params[name])
@@ -76,6 +77,7 @@ class TopologyTemplate(object):
             if (self.parsed_params and input.name not in self.parsed_params
                 or self.parsed_params is None) and input.required \
                     and input.default is None:
+                log.error("Missing required parameter: {}".format(input.name))
                 exception.ExceptionCollector.appendException(
                     exception.MissingRequiredParameterError(
                         what='Template',

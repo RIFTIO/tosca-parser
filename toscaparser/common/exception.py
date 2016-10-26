@@ -20,7 +20,7 @@ import traceback
 from toscaparser.utils.gettextutils import _
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('tosca-parser')
 
 
 class TOSCAException(Exception):

@@ -49,6 +49,7 @@ class StatefulEntityType(EntityType):
                 self.defs = None
                 ExceptionCollector.appendException(
                     InvalidTypeError(what=entitytype))
+                raise InvalidTypeError(what=entitytype)
         self.type = entitytype
 
     def get_properties_def_objects(self):

@@ -22,7 +22,7 @@ SECTIONS = (DESCRIPTION, EVENT, SCHEDULE, TARGET_FILTER, CONDITION, ACTION) = \
             'target_filter', 'condition', 'action')
 CONDITION_KEYNAMES = (CONTRAINT, PERIOD, EVALUATIONS, METHOD) = \
                      ('constraint', 'period', 'evaluations', 'method')
-log = logging.getLogger('tosca')
+log = logging.getLogger('tosca-parser')
 
 
 class Triggers(EntityTemplate):
@@ -56,6 +56,8 @@ class Triggers(EntityTemplate):
     def _validate_keys(self):
         for key in self.trigger_tpl.keys():
             if key not in SECTIONS:
+                log.info("Unknown field trigger {}: {}".
+                         format(self.name, key))
                 ExceptionCollector.appendException(
                     UnknownFieldError(what='Triggers "%s"' % self.name,
                                       field=key))

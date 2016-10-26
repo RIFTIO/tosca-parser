@@ -19,7 +19,7 @@ class DataType(StatefulEntityType):
 
     def __init__(self, datatypename, custom_def=None):
         super(DataType, self).__init__(datatypename,
-                                       self.DATATYPE_NETWORK_PREFIX,
+                                       self.DATATYPE_PREFIX,
                                        custom_def)
         self.custom_def = custom_def
 

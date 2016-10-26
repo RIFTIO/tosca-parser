@@ -15,7 +15,7 @@ from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import UnsupportedTypeError
 from toscaparser.utils.gettextutils import _
 
-log = logging.getLogger('tosca')
+log = logging.getLogger('tosca-parser')
 
 
 class UnsupportedType(object):
@@ -42,6 +42,7 @@ class UnsupportedType(object):
     @staticmethod
     def validate_type(entitytype):
         if entitytype in UnsupportedType.un_supported_types:
+            log.info("Unsupported type: {}".format(entitytype))
             ExceptionCollector.appendException(UnsupportedTypeError(
                                                what=_('%s')
                                                % entitytype))

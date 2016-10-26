@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
 from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import UnknownFieldError
 from toscaparser.elements.capabilitytype import CapabilityTypeDef
@@ -17,6 +19,8 @@ import toscaparser.elements.interfaces as ifaces
 from toscaparser.elements.interfaces import InterfacesDef
 from toscaparser.elements.relationshiptype import RelationshipType
 from toscaparser.elements.statefulentitytype import StatefulEntityType
+
+log = logging.getLogger("tosca-parser")
 
 
 class NodeType(StatefulEntityType):
@@ -65,9 +69,12 @@ class NodeType(StatefulEntityType):
             keyword = None
             node_type = None
             for require in requires:
+                log.debug("{}: Relation require: {}".format(self.ntype, require))
                 for key, req in require.items():
+                    log.debug("{}: Req {}".format(self.ntype, req))
                     if 'relationship' in req:
                         relation = req.get('relationship')
+                        log.debug("{}: Relation {}".format(self.ntype, relation))
                         if 'type' in relation:
                             relation = relation.get('type')
                         node_type = req.get('node')
@@ -83,12 +90,18 @@ class NodeType(StatefulEntityType):
                                 captype = value['capability']
                                 value = (self.
                                          _get_node_type_by_cap(key, captype))
+                            log.debug("{}: Get relation {}: {}".
+                                  format(self.ntype, key, value))
                             relation = self._get_relation(key, value)
+                            if relation is None:
+                                relation = req.get('relationship')
                             keyword = key
                             node_type = value
-                rtype = RelationshipType(relation, keyword, self.custom_def)
-                relatednode = NodeType(node_type, self.custom_def)
-                relationship[rtype] = relatednode
+                        log.debug("{}: RelationshipType: {}, {}, {}".
+                              format(self.ntype, relation or None, keyword, self.custom_def))
+                        rtype = RelationshipType(relation, keyword, self.custom_def)
+                        relatednode = NodeType(node_type, self.custom_def)
+                        relationship[rtype] = relatednode
         return relationship
 
     def _get_node_type_by_cap(self, key, cap):
@@ -116,6 +129,7 @@ class NodeType(StatefulEntityType):
         relation = None
         ntype = NodeType(ndtype)
         caps = ntype.get_capabilities()
+        log.debug("{}: Key: {}, Capabilities: {}".format(ndtype, key, caps))
         if caps and key in caps.keys():
             c = caps[key]
             for r in self.RELATIONSHIP_TYPE:

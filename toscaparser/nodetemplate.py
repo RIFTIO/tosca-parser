@@ -30,7 +30,7 @@ from toscaparser.entity_template import EntityTemplate
 from toscaparser.relationship_template import RelationshipTemplate
 from toscaparser.utils.gettextutils import _
 
-log = logging.getLogger('tosca')
+log = logging.getLogger('tosca-parser')
 
 
 class NodeTemplate(EntityTemplate):
@@ -49,6 +49,7 @@ class NodeTemplate(EntityTemplate):
         self.available_rel_types = available_rel_types
         self._relationships = {}
         self.sub_mapping_tosca_template = None
+        log.debug("Nodetemplate: {}".format(name))
 
     @property
     def relationships(self):

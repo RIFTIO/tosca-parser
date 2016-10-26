@@ -24,7 +24,7 @@ import toscaparser.utils.urlutils
 import toscaparser.utils.yamlparser
 
 YAML_LOADER = toscaparser.utils.yamlparser.load_yaml
-log = logging.getLogger("tosca")
+log = logging.getLogger("tosca-parser")
 
 
 class ImportsLoader(object):
@@ -40,7 +40,7 @@ class ImportsLoader(object):
         self.nested_tosca_tpls = []
         if not path and not tpl:
             msg = _('Input tosca template is not provided.')
-            log.warning(msg)
+            log.error(msg)
             ExceptionCollector.appendException(ValidationError(message=msg))
         self.path = path
         self.repositories = {}
@@ -63,6 +63,8 @@ class ImportsLoader(object):
     def _validate_and_load_imports(self):
         imports_names = set()
 
+        log.debug("Imports list: {}".format(self.importslist))
+
         if not self.importslist:
             msg = _('"imports" keyname is defined without including '
                     'templates.')
@@ -73,6 +75,7 @@ class ImportsLoader(object):
         for import_def in self.importslist:
             if isinstance(import_def, dict):
                 for import_name, import_uri in import_def.items():
+                    log.debug("Import {}: {}".format(import_name, import_uri))
                     if import_name in imports_names:
                         msg = (_('Duplicate import name "%s" was found.') %
                                import_name)
@@ -91,6 +94,7 @@ class ImportsLoader(object):
                         TypeValidation(custom_type, import_def)
                         self._update_custom_def(custom_type, namespace_prefix)
             else:  # old style of imports
+                log.debug("Import old style: {}".format(import_def))
                 full_file_name, custom_type = self._load_import_template(
                     None, import_def)
                 if custom_type:

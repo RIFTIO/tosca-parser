@@ -12,6 +12,7 @@
 
 
 import argparse
+import logging
 import os
 import sys
 
@@ -41,20 +42,39 @@ e.g.
 
 class ParserShell(object):
 
+    def __init__(self):
+        # Set the global logging level
+        fmt = logging.Formatter(
+            '%(asctime)-23s %(levelname)-5s  (%(name)s@%(process)d:' \
+            '%(filename)s:%(lineno)d) - %(message)s')
+        stderr_handler = logging.StreamHandler(stream=sys.stderr)
+        stderr_handler.setFormatter(fmt)
+        log = logging.getLogger("tosca-parser")
+        log.setLevel(logging.ERROR)
+        log.addHandler(stderr_handler)
+        self.log = log
+
     def get_parser(self, argv):
         parser = argparse.ArgumentParser(prog="tosca-parser")
 
-        parser.add_argument('--template-file',
+        parser.add_argument('-f', '--template-file',
                             metavar='<filename>',
                             required=True,
                             help=_('YAML template or CSAR file to parse.'))
 
+        parser.add_argument('-d', '--debug',
+                            required=False,
+                            action='store_true',
+                            help=('Enable debug logs'))
         return parser
 
     def main(self, argv):
         parser = self.get_parser(argv)
         (args, extra_args) = parser.parse_known_args(argv)
+        if args.debug:
+            self.log.setLevel(logging.DEBUG)
         path = args.template_file
+        self.log.info("Template file: {}".format(path))
         if os.path.isfile(path):
             self.parse(path)
         elif toscaparser.utils.urlutils.UrlUtils.validate_url(path):

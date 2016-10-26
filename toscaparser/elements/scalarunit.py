@@ -17,7 +17,7 @@ from toscaparser.common.exception import ExceptionCollector
 from toscaparser.utils.gettextutils import _
 from toscaparser.utils import validateutils
 
-log = logging.getLogger('tosca')
+log = logging.getLogger('tosca-parser')
 
 
 class ScalarUnit(object):
@@ -31,6 +31,7 @@ class ScalarUnit(object):
 
     def __init__(self, value):
         self.value = value
+        log.debug("Scalar unit init: {}".format(value))
 
     def _check_unit_in_scalar_standard_units(self, input_unit):
         """Check whether the input unit is following specified standard
@@ -75,6 +76,7 @@ class ScalarUnit(object):
             unit = self.SCALAR_UNIT_DEFAULT
         self.validate_scalar_unit()
 
+        log.debug("Scalar unit: {}".format(self.value))
         regex = re.compile('([0-9.]+)\s*(\w+)')
         result = regex.match(str(self.value)).groups()
         converted = (float(validateutils.str_to_num(result[0]))

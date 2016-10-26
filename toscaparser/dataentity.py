@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
 from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import MissingRequiredFieldError
 from toscaparser.common.exception import TypeMismatchError
@@ -22,6 +24,8 @@ from toscaparser.elements.scalarunit import ScalarUnit_Size
 from toscaparser.elements.scalarunit import ScalarUnit_Time
 from toscaparser.utils.gettextutils import _
 from toscaparser.utils import validateutils
+
+log = logging.getLogger("tosca-parser")
 
 
 class DataEntity(object):
@@ -40,6 +44,10 @@ class DataEntity(object):
 
         # A datatype can not have both 'type' and 'properties' definitions.
         # If the datatype has 'type' definition
+        log.debug("{}: Data type validate: {}, {}".
+                  format(self.property_name,
+                         self.datatype.value_type,
+                         self.value))
         if self.datatype.value_type:
             self.value = DataEntity.validate_datatype(self.datatype.value_type,
                                                       self.value,
@@ -68,6 +76,8 @@ class DataEntity(object):
             # check allowed field
             for value_key in list(self.value.keys()):
                 if value_key not in allowed_props:
+                    log.info("Unknown field data {}: {}".
+                             format(self.datatype.type, value_key))
                     ExceptionCollector.appendException(
                         UnknownFieldError(what=(_('Data value of type "%s"')
                                                 % self.datatype.type),
@@ -84,6 +94,8 @@ class DataEntity(object):
                 if req_key not in list(self.value.keys()):
                     missingprop.append(req_key)
             if missingprop:
+                log.info("Missing field data {}: {}".
+                         format(self.datatype.type, missingprop))
                 ExceptionCollector.appendException(
                     MissingRequiredFieldError(
                         what=(_('Data value of type "%s"')

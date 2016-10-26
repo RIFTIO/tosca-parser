@@ -706,7 +706,7 @@ capability_types:
         required: false
         description: >
           The optional identifier of an existing storage volume (resource)
-          that should be used to create the container's mount point(s) on.
+          that should be used to create the container\'s mount point(s) on.
 
 ##########################################################################
  # Interfaces Type.
