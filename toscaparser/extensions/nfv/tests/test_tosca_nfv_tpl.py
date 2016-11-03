@@ -26,4 +26,4 @@ class ToscaNFVTemplateTest(TestCase):
 
     def test_version(self):
         self.assertEqual(self.tosca.version,
-                         "tosca_simple_profile_for_nfv_1_0_0")
+                         "tosca_simple_profile_for_nfv_1_0")
