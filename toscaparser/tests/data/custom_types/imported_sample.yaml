@@ -2,7 +2,7 @@ tosca1_definitions_version: tosca_simple_yaml_1_0
 tosca_definitions_version: tosca_simple_yaml_1_10
 
 descriptions: >
-  Pizza store app that allows you to explore the features provided by PayPal's REST APIs.
+  Pizza store app that allows you to explore the features provided by PayPal\'s REST APIs.
   More detail can be found at https://github.com/paypal/rest-api-sample-app-nodejs/
 
 node_typess:

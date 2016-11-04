@@ -71,6 +71,8 @@ class TopologyTemplate(object):
             if self.parsed_params and name in self.parsed_params:
                 input.validate(self.parsed_params[name])
             else:
+                log.debug("Not found in parsed params: {}".
+                          format(self.parsed_params))
                 default = input.default
                 if default:
                     input.validate(default)

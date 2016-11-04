@@ -78,7 +78,8 @@ class Input(object):
 
     def validate_type(self, input_type):
         if input_type not in Schema.PROPERTY_TYPES:
-            log.error("Invalid type {}: {}".format(self.name, input_type))
+            log.error("Invalid type {}: {}, schema: {}".
+                      format(self.name, input_type, Schema.PROPERTY_TYPES))
             ExceptionCollector.appendException(
                 ValueError(_('Invalid type "%s".') % input_type))
 
@@ -92,6 +93,8 @@ class Input(object):
             datatype = tosca[self.type]
         elif EntityType.DATATYPE_PREFIX + self.type in tosca:
             datatype = tosca[EntityType.DATATYPE_PREFIX + self.type]
+        elif EntityType.DATATYPE_NETWORK_PREFIX + self.type in tosca:
+            datatype = tosca[EntityType.DATATYPE_NETWORK_PREFIX + self.type]
 
         DataEntity.validate_datatype(self.type, value, None, datatype)
 

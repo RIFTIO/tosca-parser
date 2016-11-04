@@ -176,6 +176,8 @@ class DataEntity(object):
             PortSpec.validate_additional_req(value, prop_name, custom_def)
         else:
             data = DataEntity(type, value, custom_def)
+            log.debug("Validate data {}: {}, def={}".
+                      format(type, value, custom_def))
             return data.validate()
 
     @staticmethod

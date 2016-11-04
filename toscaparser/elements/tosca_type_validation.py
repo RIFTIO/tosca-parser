@@ -48,13 +48,13 @@ class TypeValidation(object):
         for name in custom_type:
             if name in self.ALLOWED_TYPE_SECTIONS:
                 pass
+            elif version and version in self.exttools.get_sections() and \
+                 name in self.exttools.get_sections()[version]:
+                pass
             else:
-                if version and name in self.exttools.get_sections()[version]:
-                    pass
-                else:
-                    ExceptionCollector.appendException(
-                        UnknownFieldError(what='Template ' + (self.import_def),
-                                          field=name))
+                ExceptionCollector.appendException(
+                    UnknownFieldError(what='Template ' + (self.import_def),
+                                      field=name))
 
     def _validate_type_version(self, version):
         if version not in self.VALID_TEMPLATE_VERSIONS:

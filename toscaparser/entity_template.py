@@ -69,7 +69,7 @@ class EntityTemplate(object):
         if entity_name == 'policy_type':
             if not type:
                 msg = (_('Policy definition of "%(pname)s" must have'
-                       ' a "type" ''attribute.') % dict(pname=name))
+                       ' a "type" attribute.') % dict(pname=name))
                 ExceptionCollector.appendException(
                     ValidationError(msg))
 

@@ -11,15 +11,22 @@
 #    under the License.
 
 
+from toscaparser.elements.portspectype import PortSpec
 from toscaparser.elements.statefulentitytype import StatefulEntityType
 
 
 class DataType(StatefulEntityType):
     '''TOSCA built-in and user defined complex data type.'''
 
+    NETWORK_TYPES = ('PortDef', PortSpec.SHORTNAME,
+                     'PortInfo', 'NetworkInfo',)
+
     def __init__(self, datatypename, custom_def=None):
+        prefix = self.DATATYPE_PREFIX
+        if datatypename in self.NETWORK_TYPES:
+            prefix = self.DATATYPE_NETWORK_PREFIX
         super(DataType, self).__init__(datatypename,
-                                       self.DATATYPE_PREFIX,
+                                       prefix,
                                        custom_def)
         self.custom_def = custom_def
 
