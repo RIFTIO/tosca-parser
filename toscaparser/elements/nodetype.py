@@ -89,12 +89,7 @@ class NodeType(StatefulEntityType):
                             if isinstance(value, dict):
                                 captype = value['capability']
                                 value = (self.
-                                         _get_node_type_by_cap(key, captype))
-                            log.debug("{}: Get relation {}: {}".
-                                  format(self.ntype, key, value))
-                            relation = self._get_relation(key, value)
-                            if relation is None:
-                                relation = req.get('relationship')
+                                         _get_node_type_by_cap(captype))
                             keyword = key
                             node_type = value
                         log.debug("{}: RelationshipType: {}, {}, {}".
@@ -104,7 +99,7 @@ class NodeType(StatefulEntityType):
                         relationship[rtype] = relatednode
         return relationship
 
-    def _get_node_type_by_cap(self, key, cap):
+    def _get_node_type_by_cap(self, cap):
         '''Find the node type that has the provided capability
 
         This method will lookup all node types if they have the
@@ -115,9 +110,15 @@ class NodeType(StatefulEntityType):
         node_types = [node_type for node_type in self.TOSCA_DEF.keys()
                       if node_type.startswith(self.NODE_PREFIX) and
                       node_type != 'tosca.nodes.Root']
+        custom_node_types = [node_type for node_type in self.custom_def.keys()
+                             if node_type.startswith(self.NODE_PREFIX) and
+                             node_type != 'tosca.nodes.Root']
 
-        for node_type in node_types:
-            node_def = self.TOSCA_DEF[node_type]
+        for node_type in node_types + custom_node_types:
+            if node_type in self.TOSCA_DEF:
+                node_def = self.TOSCA_DEF[node_type]
+            else:
+                node_def = self.custom_def[node_type]
             if isinstance(node_def, dict) and 'capabilities' in node_def:
                 node_caps = node_def['capabilities']
                 for value in node_caps.values():
@@ -127,7 +128,7 @@ class NodeType(StatefulEntityType):
 
     def _get_relation(self, key, ndtype):
         relation = None
-        ntype = NodeType(ndtype)
+        ntype = NodeType(ndtype, self.custom_def)
         caps = ntype.get_capabilities()
         log.debug("{}: Key: {}, Capabilities: {}".format(ndtype, key, caps))
         if caps and key in caps.keys():

@@ -39,6 +39,24 @@ class ToscaTemplateValidationTest(TestCase):
                   'db_root_pwd': '12345678'}
         self.assertIsNotNone(ToscaTemplate(tpl_path, params))
 
+    def test_custom_interface_allowed(self):
+        tpl_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data/interfaces/test_custom_interface_in_template.yaml")
+        self.assertIsNotNone(ToscaTemplate(tpl_path))
+
+    def test_custom_interface_invalid_operation(self):
+        tpl_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data/interfaces/test_custom_interface_invalid_operation.yaml")
+        self.assertRaises(exception.ValidationError,
+                          ToscaTemplate, tpl_path)
+        exception.ExceptionCollector.assertExceptionMessage(
+            exception.UnknownFieldError,
+            _('"interfaces" of template "customInterfaceTest" '
+              'contains unknown field "CustomOp4". '
+              'Refer to the definition to verify valid values.'))
+
     def test_first_level_sections(self):
         tpl_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
@@ -427,6 +445,18 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
                                                  "node_types")
         self.assertTrue(custom_defs.get("mycompany.tosca.nodes."
                                         "WebApplication.WordPress"))
+
+    def test_imports_file_with_suffix_yml(self):
+            tpl_snippet = '''
+            imports:
+              - custom_types/wordpress.yml
+            '''
+            path = 'toscaparser/tests/data/tosca_elk.yaml'
+            custom_defs = self._imports_content_test(tpl_snippet,
+                                                     path,
+                                                     "node_types")
+            self.assertTrue(custom_defs.get("tosca.nodes."
+                                            "WebApplication.WordPress"))
 
     def test_import_error_file_uri(self):
         tpl_snippet = '''
@@ -1563,7 +1593,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
             lambda: Policy(name, policies[name], None, None))
         self.assertEqual(expectedmessage, err.__str__())
 
-    def test_policy_trigger_valid_keyname(self):
+    def test_policy_trigger_valid_keyname_senlin_resources(self):
         tpl_snippet = '''
         triggers:
          - resize_compute:
@@ -1577,7 +1607,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
                requirement: host
                capability: Container
              condition:
-               constraint: utilization greater_than 50%
+               constraint: { greater_than: 50 }
                period: 60
                evaluations: 1
                method : average
@@ -1592,7 +1622,28 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
         name = list(triggers.keys())[0]
         Triggers(name, triggers[name])
 
-    def test_policy_trigger_invalid_keyname(self):
+    def test_policy_trigger_valid_keyname_heat_resources(self):
+        tpl_snippet = '''
+        triggers:
+         - high_cpu_usage:
+             description: trigger
+             meter_name: cpu_util
+             condition:
+               constraint: utilization greater_than 60%
+               threshold: 60
+               period: 600
+               evaluations: 1
+               method: average
+               comparison_operator: gt
+             metadata: SG1
+             action: [SP1]
+        '''
+        triggers = (toscaparser.utils.yamlparser.
+                    simple_parse(tpl_snippet))['triggers'][0]
+        name = list(triggers.keys())[0]
+        Triggers(name, triggers[name])
+
+    def test_policy_trigger_invalid_keyname_senlin_resources(self):
         tpl_snippet = '''
         triggers:
          - resize_compute:
@@ -1622,6 +1673,34 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
         expectedmessage = _(
             'Triggers "resize_compute" contains unknown field '
             '"target_filter1". Refer to the definition '
+            'to verify valid values.')
+        err = self.assertRaises(
+            exception.UnknownFieldError,
+            lambda: Triggers(name, triggers[name]))
+        self.assertEqual(expectedmessage, err.__str__())
+
+    def test_policy_trigger_invalid_keyname_heat_resources(self):
+        tpl_snippet = '''
+        triggers:
+         - high_cpu_usage:
+             description: trigger
+             meter_name: cpu_util
+             condition:
+               constraint: utilization greater_than 60%
+               threshold: 60
+               period: 600
+               evaluations: 1
+               method: average
+               comparison_operator: gt
+             metadata1: SG1
+             action: [SP1]
+        '''
+        triggers = (toscaparser.utils.yamlparser.
+                    simple_parse(tpl_snippet))['triggers'][0]
+        name = list(triggers.keys())[0]
+        expectedmessage = _(
+            'Triggers "high_cpu_usage" contains unknown field '
+            '"metadata1". Refer to the definition '
             'to verify valid values.')
         err = self.assertRaises(
             exception.UnknownFieldError,
@@ -1707,3 +1786,60 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
             toscaparser.utils.yamlparser.simple_parse(
                 tpl_snippet_qualified_name))
         TopologyTemplate(tpl, None)
+
+    def test_requirements_as_list(self):
+        """Node template with requirements provided with or without list
+
+        Node template requirements are required to be provided as list.
+        """
+
+        expectedmessage = _('"requirements" of template "my_webserver"'
+                            ' must be of type "list".')
+
+        # requirements provided as dictionary
+        tpl_snippet1 = '''
+        node_templates:
+          my_webserver:
+            type: tosca.nodes.WebServer
+            requirements:
+              host: server
+          server:
+            type: tosca.nodes.Compute
+        '''
+        err1 = self.assertRaises(
+            exception.TypeMismatchError,
+            lambda: self._single_node_template_content_test(tpl_snippet1))
+        self.assertEqual(expectedmessage, err1.__str__())
+
+        # requirements provided as string
+        tpl_snippet2 = '''
+        node_templates:
+          my_webserver:
+            type: tosca.nodes.WebServer
+            requirements: server
+          server:
+            type: tosca.nodes.Compute
+        '''
+        err2 = self.assertRaises(
+            exception.TypeMismatchError,
+            lambda: self._single_node_template_content_test(tpl_snippet2))
+        self.assertEqual(expectedmessage, err2.__str__())
+
+        # requirements provided as list
+        tpl_snippet3 = '''
+        node_templates:
+          my_webserver:
+            type: tosca.nodes.WebServer
+            requirements:
+              - host: server
+          server:
+            type: tosca.nodes.Compute
+        '''
+        self.assertIsNone(
+            self._single_node_template_content_test(tpl_snippet3))
+
+    def test_properties_override_with_flavor_and_image(self):
+        tpl_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data/test_normative_type_properties_override.yaml")
+        self.assertIsNotNone(ToscaTemplate(tpl_path))

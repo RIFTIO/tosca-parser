@@ -32,7 +32,7 @@ class Capability(object):
                 if props_def and name in props_def:
                     properties.append(Property(name, value,
                                                props_def[name].schema,
-                                               custom_def=self.custom_def))
+                                               self.custom_def))
         return properties
 
     def get_properties(self):

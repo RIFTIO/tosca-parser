@@ -94,9 +94,7 @@ class EntityType(object):
             return False
 
     def entity_value(self, defs, key):
-        if defs is None:
-            return None
-        if key in defs:
+        if defs and key in defs:
             return defs[key]
 
     def get_value(self, ndtype, defs=None, parent=None):
@@ -105,9 +103,7 @@ class EntityType(object):
             if not hasattr(self, 'defs'):
                 return None
             defs = self.defs
-            if defs is None:
-                return None
-        if ndtype in defs:
+        if defs and ndtype in defs:
             # copy the value to avoid that next operations add items in the
             # item definitions
             value = copy.copy(defs[ndtype])

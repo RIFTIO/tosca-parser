@@ -14,6 +14,7 @@
 import logging
 import os
 
+from copy import deepcopy
 from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import InvalidTemplateVersion
 from toscaparser.common.exception import MissingRequiredFieldError
@@ -35,15 +36,14 @@ SECTIONS = (DEFINITION_VERSION, DEFAULT_NAMESPACE, TEMPLATE_NAME,
             TOPOLOGY_TEMPLATE, TEMPLATE_AUTHOR, TEMPLATE_VERSION,
             DESCRIPTION, IMPORTS, DSL_DEFINITIONS, NODE_TYPES,
             RELATIONSHIP_TYPES, RELATIONSHIP_TEMPLATES,
-            CAPABILITY_TYPES, ARTIFACT_TYPES, DATA_TYPES,
-            POLICY_TYPES, GROUP_TYPES, REPOSITORIES, INTERFACE_TYPES) = \
+            CAPABILITY_TYPES, ARTIFACT_TYPES, DATA_TYPES, INTERFACE_TYPES,
+            POLICY_TYPES, GROUP_TYPES, REPOSITORIES) = \
            ('tosca_definitions_version', 'tosca_default_namespace',
             'template_name', 'topology_template', 'template_author',
             'template_version', 'description', 'imports', 'dsl_definitions',
             'node_types', 'relationship_types', 'relationship_templates',
             'capability_types', 'artifact_types', 'data_types',
-            'policy_types', 'group_types', 'repositories', 'interface_types')
-
+            'interface_types', 'policy_types', 'group_types', 'repositories')
 # Sections that are specific to individual template definitions
 SPECIAL_SECTIONS = (METADATA) = ('metadata')
 
@@ -108,6 +108,7 @@ class ToscaTemplate(object):
                 self.relationship_templates = self._relationship_templates()
                 self.nodetemplates = self._nodetemplates()
                 self.outputs = self._outputs()
+                self.policies = self._policies()
                 self._handle_nested_tosca_templates_with_topology()
                 self.graph = ToscaGraph(self.nodetemplates)
 
@@ -163,9 +164,12 @@ class ToscaTemplate(object):
     def _tpl_topology_template(self):
         return self.tpl.get(TOPOLOGY_TEMPLATE)
 
+    def _policies(self):
+        return self.topology_template.policies
+
     def _get_all_custom_defs(self, imports=None):
         types = [IMPORTS, NODE_TYPES, CAPABILITY_TYPES, RELATIONSHIP_TYPES,
-                 DATA_TYPES, POLICY_TYPES, GROUP_TYPES]
+                 DATA_TYPES, INTERFACE_TYPES, POLICY_TYPES, GROUP_TYPES]
         custom_defs_final = {}
         custom_defs = self._get_custom_types(types, imports)
         if custom_defs:
@@ -228,12 +232,14 @@ class ToscaTemplate(object):
         for fname, tosca_tpl in self.nested_tosca_tpls_with_topology.items():
             for nodetemplate in self.nodetemplates:
                 if self._is_sub_mapped_node(nodetemplate, tosca_tpl):
+                    parsed_params = self._get_params_for_nested_template(
+                        nodetemplate)
                     topology_tpl = tosca_tpl.get(TOPOLOGY_TEMPLATE)
                     topology_with_sub_mapping = TopologyTemplate(
                         topology_tpl,
                         self._get_all_custom_defs(),
                         self.relationship_types,
-                        self.parsed_params,
+                        parsed_params,
                         nodetemplate)
                     if topology_with_sub_mapping.substitution_mappings:
                         # Record nested topo templates in top level template
@@ -270,7 +276,7 @@ class ToscaTemplate(object):
                 update_definitions(version)
 
     def _get_path(self, path):
-        if path.lower().endswith('.yaml'):
+        if path.lower().endswith('.yaml') or path.lower().endswith('.yml'):
             return path
         elif path.lower().endswith(('.zip', '.csar')):
             # a CSAR archive
@@ -315,13 +321,23 @@ class ToscaTemplate(object):
         else:
             return False
 
+    def _get_params_for_nested_template(self, nodetemplate):
+        """Return total params for nested_template."""
+        parsed_params = deepcopy(self.parsed_params) \
+            if self.parsed_params else {}
+        if nodetemplate:
+            for pname in nodetemplate.get_properties():
+                parsed_params.update({pname:
+                                      nodetemplate.get_property_value(pname)})
+        return parsed_params
+
     def get_sub_mapping_node_type(self, tosca_tpl):
         """Return substitution mappings node type."""
         if tosca_tpl:
             return TopologyTemplate.get_sub_mapping_node_type(
                 tosca_tpl.get(TOPOLOGY_TEMPLATE))
 
-    def has_substitution_mappings(self):
+    def _has_substitution_mappings(self):
         """Return True if the template has valid substitution mappings."""
         return self.topology_template is not None and \
             self.topology_template.substitution_mappings is not None

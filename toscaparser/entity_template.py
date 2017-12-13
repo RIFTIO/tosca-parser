@@ -72,7 +72,6 @@ class EntityTemplate(object):
                        ' a "type" attribute.') % dict(pname=name))
                 ExceptionCollector.appendException(
                     ValidationError(msg))
-
             self.type_definition = PolicyType(type, custom_def)
         if entity_name == 'group_type':
             self.type_definition = GroupType(type, custom_def) \
@@ -169,7 +168,7 @@ class EntityTemplate(object):
                     if 'properties' in props and props['properties']:
                         properties.update(props['properties'])
 
-                    cap = Capability(name, properties, c, custom_def=self.custom_def)
+                    cap = Capability(name, properties, c, self.custom_def)
                     capability.append(cap)
         return capability
 

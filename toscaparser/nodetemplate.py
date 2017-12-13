@@ -22,6 +22,7 @@ from toscaparser.common.exception import ValidationError
 from toscaparser.dataentity import DataEntity
 from toscaparser.elements.interfaces import CONFIGURE
 from toscaparser.elements.interfaces import CONFIGURE_SHORTNAME
+from toscaparser.elements.interfaces import INTERFACE_DEF_RESERVED_WORDS
 from toscaparser.elements.interfaces import InterfacesDef
 from toscaparser.elements.interfaces import LIFECYCLE
 from toscaparser.elements.interfaces import LIFECYCLE_SHORTNAME
@@ -55,7 +56,7 @@ class NodeTemplate(EntityTemplate):
     def relationships(self):
         if not self._relationships:
             requires = self.requirements
-            if requires:
+            if requires and isinstance(requires, list):
                 for r in requires:
                     for r1, value in r.items():
                         explicit = self._get_explicit_relationship(r, value)
@@ -79,7 +80,9 @@ class NodeTemplate(EntityTemplate):
             # TODO(spzala) implement look up once Glance meta data is available
             # to find a matching TOSCA node using the TOSCA types
             msg = _('Lookup by TOSCA types is not supported. '
-                    'Requirement for "%s" can not be full-filled.') % self.name
+                    'Requirement node "%(node)s" for "%(name)s"'
+                    ' can not be full-filled.') \
+                % {'node': node, 'name': self.name}
             if (node in list(self.type_definition.TOSCA_DEF.keys())
                or node in self.custom_def):
                 ExceptionCollector.appendException(NotImplementedError(msg))
@@ -87,7 +90,9 @@ class NodeTemplate(EntityTemplate):
 
             if node not in self.templates:
                 ExceptionCollector.appendException(
-                    KeyError(_('Node template "%s" was not found.') % node))
+                    KeyError(_('Node template "%(node)s" was not found'
+                               ' in "%(name)s".')
+                             % {'node': node, 'name': self.name}))
                 return
 
             related_tpl = NodeTemplate(node, self.templates, self.custom_def)
@@ -207,13 +212,15 @@ class NodeTemplate(EntityTemplate):
                     TypeMismatchError(
                         what='"requirements" of template "%s"' % self.name,
                         type='list'))
-            for req in requires:
-                for r1, value in req.items():
-                    if isinstance(value, dict):
-                        self._validate_requirements_keys(value)
-                        self._validate_requirements_properties(value)
-                        allowed_reqs.append(r1)
-                self._common_validate_field(req, allowed_reqs, 'requirements')
+            else:
+                for req in requires:
+                    for r1, value in req.items():
+                        if isinstance(value, dict):
+                            self._validate_requirements_keys(value)
+                            self._validate_requirements_properties(value)
+                            allowed_reqs.append(r1)
+                    self._common_validate_field(req, allowed_reqs,
+                                                'requirements')
 
     def _validate_requirements_properties(self, requirements):
         # TODO(anyone): Only occurrences property of the requirements is
@@ -246,23 +253,42 @@ class NodeTemplate(EntityTemplate):
         ifaces = self.type_definition.get_value(self.INTERFACES,
                                                 self.entity_tpl)
         if ifaces:
-            for i in ifaces:
-                for name, value in ifaces.items():
-                    if name in (LIFECYCLE, LIFECYCLE_SHORTNAME):
-                        self._common_validate_field(
-                            value, InterfacesDef.
-                            interfaces_node_lifecycle_operations,
-                            'interfaces')
-                    elif name in (CONFIGURE, CONFIGURE_SHORTNAME):
-                        self._common_validate_field(
-                            value, InterfacesDef.
-                            interfaces_relationship_configure_operations,
-                            'interfaces')
-                    else:
-                        ExceptionCollector.appendException(
-                            UnknownFieldError(
-                                what='"interfaces" of template "%s"' %
-                                self.name, field=name))
+            for name, value in ifaces.items():
+                if name in (LIFECYCLE, LIFECYCLE_SHORTNAME):
+                    self._common_validate_field(
+                        value, InterfacesDef.
+                        interfaces_node_lifecycle_operations,
+                        'interfaces')
+                elif name in (CONFIGURE, CONFIGURE_SHORTNAME):
+                    self._common_validate_field(
+                        value, InterfacesDef.
+                        interfaces_relationship_configure_operations,
+                        'interfaces')
+                elif name in self.type_definition.interfaces.keys():
+                    self._common_validate_field(
+                        value,
+                        self._collect_custom_iface_operations(name),
+                        'interfaces')
+                else:
+                    ExceptionCollector.appendException(
+                        UnknownFieldError(
+                            what='"interfaces" of template "%s"' %
+                            self.name, field=name))
+
+    def _collect_custom_iface_operations(self, name):
+        allowed_operations = []
+        nodetype_iface_def = self.type_definition.interfaces[name]
+        allowed_operations.extend(nodetype_iface_def.keys())
+        if 'type' in nodetype_iface_def:
+            iface_type = nodetype_iface_def['type']
+            if iface_type in self.type_definition.custom_def:
+                iface_type_def = self.type_definition.custom_def[iface_type]
+            else:
+                iface_type_def = self.type_definition.TOSCA_DEF[iface_type]
+            allowed_operations.extend(iface_type_def.keys())
+        allowed_operations = [op for op in allowed_operations if
+                              op not in INTERFACE_DEF_RESERVED_WORDS]
+        return allowed_operations
 
     def _validate_fields(self, nodetemplate):
         for name in nodetemplate.keys():

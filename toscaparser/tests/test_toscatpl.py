@@ -38,7 +38,7 @@ class ToscaTemplateTest(TestCase):
         "data/tosca_elk.yaml")
     tosca_repo_tpl = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        "data/tosca_repositories_test_definition.yaml")
+        "data/repositories/tosca_repositories_test_definition.yaml")
 
     def test_version(self):
         self.assertEqual(self.tosca.version, "tosca_simple_yaml_1_0")
@@ -216,6 +216,10 @@ class ToscaTemplateTest(TestCase):
         tosca_tpl = self._load_template('test_no_outputs_in_template.yaml')
         self.assertEqual(0, len(tosca_tpl.outputs))
 
+    def test_template_file_with_suffix_yml(self):
+        tosca_tpl = self._load_template('custom_types/wordpress.yml')
+        self.assertIsNotNone(tosca_tpl)
+
     def test_relationship_interface(self):
         template = ToscaTemplate(self.tosca_elk_tpl)
         for node_tpl in template.nodetemplates:
@@ -287,7 +291,7 @@ class ToscaTemplateTest(TestCase):
         """
         tosca_tpl = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            "data/test_requirements.yaml")
+            "data/requirements/test_requirements.yaml")
         tosca = ToscaTemplate(tosca_tpl)
         for node_tpl in tosca.nodetemplates:
             if node_tpl.name == 'my_app':
@@ -510,7 +514,8 @@ class ToscaTemplateTest(TestCase):
             os.path.dirname(os.path.abspath(__file__)),
             "data/test_instance_nested_imports.yaml")
         tosca = ToscaTemplate(tosca_tpl)
-        expected_custom_types = ['tosca.nodes.WebApplication.WordPress',
+        expected_custom_types = ['tosca.nodes.SoftwareComponent.Kibana',
+                                 'tosca.nodes.WebApplication.WordPress',
                                  'test_namespace_prefix.Rsyslog',
                                  'Test2ndRsyslogType',
                                  'test_2nd_namespace_prefix.Rsyslog',
@@ -571,7 +576,8 @@ class ToscaTemplateTest(TestCase):
         exception.ExceptionCollector.assertExceptionMessage(
             exception.UnknownFieldError, err7_msg)
 
-        err8_msg = _('\'Node template "server1" was not found.\'')
+        err8_msg = _('\'Node template "server1" was not found in '
+                     '"webserver".\'')
         exception.ExceptionCollector.assertExceptionMessage(
             KeyError, err8_msg)
 
@@ -579,6 +585,10 @@ class ToscaTemplateTest(TestCase):
                      'required field "type".')
         exception.ExceptionCollector.assertExceptionMessage(
             exception.MissingRequiredFieldError, err9_msg)
+
+        err10_msg = _('Type "tosca.nodes.XYZ" is not a valid type.')
+        exception.ExceptionCollector.assertExceptionMessage(
+            exception.InvalidTypeError, err10_msg)
 
     def test_invalid_section_names(self):
         tosca_tpl = os.path.join(
@@ -752,7 +762,7 @@ class ToscaTemplateTest(TestCase):
     def test_node_filter(self):
         tosca_tpl = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            "data/test_node_filter.yaml")
+            "data/node_filter/test_node_filter.yaml")
         ToscaTemplate(tosca_tpl)
 
     def test_attributes_inheritance(self):
@@ -764,13 +774,19 @@ class ToscaTemplateTest(TestCase):
     def test_repositories_definition(self):
         tosca_tpl = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            "data/test_repositories_definition.yaml")
+            "data/repositories/test_repositories_definition.yaml")
         ToscaTemplate(tosca_tpl)
 
     def test_custom_caps_def(self):
         tosca_tpl = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             "data/test_custom_caps_def.yaml")
+        ToscaTemplate(tosca_tpl)
+
+    def test_custom_caps_with_custom_datatype(self):
+        tosca_tpl = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data/test_custom_caps_with_datatype.yaml")
         ToscaTemplate(tosca_tpl)
 
     def test_custom_rel_with_script(self):
@@ -824,7 +840,7 @@ class ToscaTemplateTest(TestCase):
     def test_containers(self):
         tosca_tpl = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            "data/test_containers.yaml")
+            "data/containers/test_container_docker_mysql.yaml")
         ToscaTemplate(tosca_tpl, parsed_params={"mysql_root_pwd": "12345678"})
 
     def test_endpoint_on_compute(self):
@@ -838,3 +854,18 @@ class ToscaTemplateTest(TestCase):
             os.path.dirname(os.path.abspath(__file__)),
             "data/dsl_definitions/test_nested_dsl_def.yaml")
         self.assertIsNotNone(ToscaTemplate(tosca_tpl))
+
+    def test_multiple_policies(self):
+        tosca_tpl = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data/policies/test_tosca_nfv_multiple_policies.yaml")
+        tosca = ToscaTemplate(tosca_tpl)
+        self.assertEqual(
+            ['ALRM1', 'SP1', 'SP2'],
+            sorted([policy.name for policy in tosca.policies]))
+
+    def test_custom_capability(self):
+        tosca_tpl = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data/test_custom_capabilty.yaml")
+        ToscaTemplate(tosca_tpl)
