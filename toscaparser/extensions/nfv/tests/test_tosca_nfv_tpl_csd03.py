@@ -10,10 +10,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# VERSION and DEFS_FILE are required for all extensions
+import os
 
-VERSION = 'tosca_simple_profile_for_nfv_1_0'
+from toscaparser.tests.base import TestCase
+from toscaparser.tosca_template import ToscaTemplate
 
-DEFS_FILE = "tosca-simple-nfv-1.0.yaml"
 
-SECTIONS = ('metadata')
+class ToscaNFVTemplateTest(TestCase):
+
+    '''TOSCA NFV template.'''
+    tosca_tpl = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "data/tosca_helloworld_nfv_csd03.yaml")
+    tosca = ToscaTemplate(tosca_tpl)
+
+    def test_version(self):
+        self.assertEqual(self.tosca.version,
+                         "tosca_simple_profile_for_nfv_1_0_csd03")

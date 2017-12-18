@@ -21,9 +21,9 @@ class PolicyType(StatefulEntityType):
 
     '''TOSCA built-in policies type.'''
     SECTIONS = (DERIVED_FROM, METADATA, PROPERTIES, VERSION, DESCRIPTION,
-                TARGETS, TRIGGERS, TYPE) = \
+                TARGETS, TRIGGERS, TYPE, EXTENTIONS) = \
                ('derived_from', 'metadata', 'properties', 'version',
-                'description', 'targets', 'triggers', 'type')
+                'description', 'targets', 'triggers', 'type', '_extensions')
 
     def __init__(self, ptype, custom_def=None):
         super(PolicyType, self).__init__(ptype, self.POLICY_PREFIX,

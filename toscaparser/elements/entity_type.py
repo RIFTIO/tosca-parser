@@ -26,9 +26,10 @@ class EntityType(object):
     '''Base class for TOSCA elements.'''
 
     SECTIONS = (DERIVED_FROM, PROPERTIES, ATTRIBUTES, REQUIREMENTS,
-                INTERFACES, CAPABILITIES, TYPE, ARTIFACTS) = \
+                INTERFACES, CAPABILITIES, TYPE, ARTIFACTS, EXTENTIONS) = \
                ('derived_from', 'properties', 'attributes', 'requirements',
-                'interfaces', 'capabilities', 'type', 'artifacts')
+                'interfaces', 'capabilities', 'type', 'artifacts',
+                '_extensions')
 
     TOSCA_DEF_SECTIONS = ['node_types', 'data_types', 'artifact_types',
                           'group_types', 'relationship_types',

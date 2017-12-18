@@ -10,14 +10,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# Updated based on Committee Specification Draft 03 (2016-Mar-17)
-
 ##########################################################################
 # The content of this file reflects TOSCA NFV Profile in YAML version
-# 1.0. It describes the definition for TOSCA NFV types including Node Type,
+# 1.0.0. It describes the definition for TOSCA NFV types including Node Type,
 # Relationship Type, Capability Type and Interfaces.
 ##########################################################################
-tosca_definitions_version: tosca_simple_profile_for_nfv_1_0
+tosca_definitions_version: tosca_simple_profile_for_nfv_1_0_0
 
 ##########################################################################
 # Node Type.
@@ -41,16 +39,23 @@ node_types:
       - virtualLink:
           capability: tosca.capabilities.nfv.VirtualLinkable
           relationship: tosca.relationships.nfv.VirtualLinksTo
+          node: tosca.nodes.nfv.VL
 
   tosca.nodes.nfv.VDU:
-    derived_from: tosca.nodes.Root
+    derived_from: tosca.nodes.Compute
     capabilities:
-      nfv_compute:
-        type: tosca.capabilities.Compute.Container.Architecture
+      high_availability:
+        type: tosca.capabilities.nfv.HA
       virtualbinding:
         type: tosca.capabilities.nfv.VirtualBindable
       monitoring_parameter:
         type: tosca.capabilities.nfv.Metric
+    requirements:
+      - high_availability:
+          capability: tosca.capabilities.nfv.HA
+          relationship: tosca.relationships.nfv.HA
+          node: tosca.nodes.nfv.VDU
+          occurrences: [ 0, 1 ]
 
   tosca.nodes.nfv.CP:
     derived_from: tosca.nodes.network.Port
@@ -58,16 +63,15 @@ node_types:
       type:
         type: string
         required: false
-      anti_spoof_protection:
-        type: boolean
-        required: false
     requirements:
       - virtualLink:
           capability: tosca.capabilities.nfv.VirtualLinkable
           relationship: tosca.relationships.nfv.VirtualLinksTo
+          node: tosca.nodes.nfv.VL
       - virtualBinding:
           capability: tosca.capabilities.nfv.VirtualBindable
           relationship: tosca.relationships.nfv.VirtualBindsTo
+          node: tosca.nodes.nfv.VDU
     attributes:
       address:
         type: string
@@ -77,7 +81,7 @@ node_types:
     properties:
       vendor:
         type: string
-        required: false
+        required: true
         description: name of the vendor who generate this VL
     capabilities:
       virtual_linkable:
@@ -91,11 +95,6 @@ node_types:
 
   tosca.nodes.nfv.VL.ELAN:
     derived_from: tosca.nodes.nfv.VL
-    properties:
-      name:
-        type: string
-        required: false
-        description: Existing virtual network
 
   tosca.nodes.nfv.VL.ETree:
     derived_from: tosca.nodes.nfv.VL
@@ -110,18 +109,7 @@ node_types:
     requirements:
       - forwarder:
           capability: tosca.capabilities.nfv.Forwarder
-
-  tosca.nodes.nfv.FP:
-    derived_from: tosca.nodes.Root
-    properties:
-      policy:
-        type: string
-        required: false
-      description:
-        type: string
-    requirements:
-      - forwarder:
-          capability: tosca.capabilities.nfv.Forwarder
+          relationship: tosca.relationships.nfv.ForwardsTo
 
 ##########################################################################
 # Relationship Type.
@@ -131,12 +119,16 @@ node_types:
 
 relationship_types:
   tosca.relationships.nfv.VirtualLinksTo:
-    derived_from: tosca.relationships.DependsOn
+    derived_from: tosca.relationships.network.LinksTo
     valid_target_types: [ tosca.capabilities.nfv.VirtualLinkable ]
 
   tosca.relationships.nfv.VirtualBindsTo:
-    derived_from: tosca.relationships.DependsOn
-    valid_target_types: [ tosca.capabilities.nfv.VirtualBindable]
+    derived_from: tosca.relationships.network.BindsTo
+    valid_target_types: [ tosca.capabilities.nfv.VirtualBindable ]
+
+  tosca.relationships.nfv.HA:
+    derived_from: tosca.relationships.Root
+    valid_target_types: [ tosca.capabilities.nfv.HA ]
 
   tosca.relationships.nfv.Monitor:
     derived_from: tosca.relationships.ConnectsTo
@@ -154,48 +146,26 @@ relationship_types:
 
 capability_types:
   tosca.capabilities.nfv.VirtualLinkable:
-    derived_from: tosca.capabilities.Node
+    derived_from: tosca.capabilities.network.Linkable
 
   tosca.capabilities.nfv.VirtualBindable:
-    derived_from: tosca.capabilities.Node
+    derived_from: tosca.capabilities.network.Bindable
+
+  tosca.capabilities.nfv.HA:
+    derived_from: tosca.capabilities.Root
+    valid_source_types: [ tosca.nodes.nfv.VDU ]
+
+  tosca.capabilities.nfv.HA.ActiveActive:
+    derived_from: tosca.capabilities.nfv.HA
+
+  tosca.capabilities.nfv.HA.ActivePassive:
+    derived_from: tosca.capabilities.nfv.HA
 
   tosca.capabilities.nfv.Metric:
-    derived_from: tosca.capabilities.Endpoint
+    derived_from: tosca.capabilities.Root
 
   tosca.capabilities.nfv.Forwarder:
     derived_from: tosca.capabilities.Root
-
-  tosca.capabilities.Compute.Container.Architecture:
-    derived_from: tosca.capabilities.Container
-    properties:
-      mem_page_size:
-        type: string
-        description: |-
-          Memory page allocation size. If a VM requires
-          hugepages, it should choose huge or size_2MB
-          or size_1GB. If the VM prefers hugepages, it
-          should chose prefer_huge.
-             huge         - Require hugepages (either 2MB or 1GB)
-             normal       - Does not require hugepages
-             size_2MB     - Requires 2MB hugepages
-             size_1GB     - Requires 1GB hugepages
-             prefer_huge  - Application perfers hugepages
-          NOTE - huge and normal is only defined in standards as of
-                 now.
-        required: false
-        constraints:
-          - valid_values: [normal, huge, size_2MB, size_1GB, prefer_huge]
-      cpu_allocation:
-        type: tosca.datatypes.compute.Container.Architecture.CPUAllocation
-        required: false
-      numa_nodes:
-        type: map
-        required: false
-        entry_schema:
-          type: tosca.datatypes.compute.Container.Architecture.NUMA
-
-  tosca.capabilities.nfv.Metric:
-    derived_from: tosca.capabilities.Endpoint
 
 ##########################################################################
  # Interfaces Type.
@@ -209,48 +179,6 @@ capability_types:
  # A Datatype is a complex data type declaration which contains other
  # complex or simple data types.
 ##########################################################################
-
-data_types:
-  tosca.datatypes.compute.Container.Architecture.CPUAllocation:
-    derived_from: tosca.datatypes.Root
-    properties:
-      cpu_affinity:
-        type: string
-        required: false
-        constraints:
-          - valid_values: [shared, dedicated]
-      thread_allocation:
-        type: string
-        required: false
-        constraints:
-          - valid_values: [avoid, separate, isolate, prefer]
-      socket_count:
-        type: integer
-        required: false
-      core_count:
-        type: integer
-        required: false
-      thread_count:
-        type: integer
-        required: false
-
-  tosca.datatypes.compute.Container.Architecture.NUMA:
-    derived_from: tosca.datatypes.Root
-    properties:
-      id:
-        type: integer
-        constraints:
-          - greater_or_equal: 0
-      vcpus:
-        type: list
-        entry_schema:
-          type: integer
-          constraints:
-            -  greater_or_equal: 0
-      mem_size:
-        type: scalar-unit.size
-        constraints:
-          - greater_or_equal: 0 MB
 
 ##########################################################################
  # Artifact Type.
@@ -310,5 +238,3 @@ group_types:
           type: string
         required: true
         description: Reference to a list of  VNFD used in this VNF Forwarding Graph
-
-    members: [ tosca.nodes.nfv.FP ]

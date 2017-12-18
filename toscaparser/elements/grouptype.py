@@ -21,9 +21,9 @@ class GroupType(StatefulEntityType):
     '''TOSCA built-in group type.'''
 
     SECTIONS = (DERIVED_FROM, VERSION, METADATA, DESCRIPTION, PROPERTIES,
-                MEMBERS, INTERFACES) = \
+                MEMBERS, INTERFACES, EXTENTIONS) = \
                ("derived_from", "version", "metadata", "description",
-                "properties", "members", "interfaces")
+                "properties", "members", "interfaces", "_extensions")
 
     def __init__(self, grouptype, custom_def=None):
         super(GroupType, self).__init__(grouptype, self.GROUP_PREFIX,

@@ -25,10 +25,12 @@ log = logging.getLogger("tosca-parser")
 
 class NodeType(StatefulEntityType):
     '''TOSCA built-in node type.'''
-    SECTIONS = (DERIVED_FROM, METADATA, PROPERTIES, VERSION, DESCRIPTION, ATTRIBUTES, REQUIREMENTS, CAPABILITIES, INTERFACES, ARTIFACTS) = \
+    SECTIONS = (DERIVED_FROM, METADATA, PROPERTIES, VERSION, DESCRIPTION,
+                ATTRIBUTES, REQUIREMENTS, CAPABILITIES, INTERFACES,
+                ARTIFACTS, EXTENTIONS) = \
                ('derived_from', 'metadata', 'properties', 'version',
                 'description', 'attributes', 'requirements', 'capabilities',
-                'interfaces', 'artifacts')
+                'interfaces', 'artifacts', '_extensions')
 
     def __init__(self, ntype, custom_def=None):
         super(NodeType, self).__init__(ntype, self.NODE_PREFIX, custom_def)

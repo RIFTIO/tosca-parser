@@ -7,25 +7,23 @@ metadata:
 
 topology_template:
   node_templates:
-    VNF1:
-      type: tosca.nodes.nfv.VNF
-      properties:
-        id: vnf1
-        vendor: acmetelco
-        version: 1.0
-
     VDU1:
-      type: tosca.nodes.nfv.VDU
+      type: tosca.nodes.nfv.VDU.Compute
+      properties:
+        name: vdu1
+        description: Test
+        configurable_properties: {}
 
     CP1:
-      type: tosca.nodes.nfv.CP
+      type: tosca.nodes.nfv.VduCpd
       properties:
-        type: vPort
+        layer_protocol: ipv4
       requirements:
-        - virtualLink: PrivateNetwork
-        - virtualBinding: VDU1
+        - virtual_link: PrivateNetwork
+        - virtual_binding: VDU1
 
     PrivateNetwork:
-      type: tosca.nodes.nfv.VL
+      type: tosca.nodes.nfv.VnfVirtualLinkDesc
       properties:
-        vendor: ACME Networks
+        connectivity_type:
+            layer_protocol: ethernet

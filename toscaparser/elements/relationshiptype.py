@@ -19,9 +19,10 @@ class RelationshipType(StatefulEntityType):
     '''TOSCA built-in relationship type.'''
     SECTIONS = (DERIVED_FROM, VALID_TARGET_TYPES, INTERFACES,
                 ATTRIBUTES, PROPERTIES, DESCRIPTION, VERSION,
-                CREDENTIAL) = ('derived_from', 'valid_target_types',
-                               'interfaces', 'attributes', 'properties',
-                               'description', 'version', 'credential')
+                CREDENTIAL, EXTENTIONS) = \
+               ('derived_from', 'valid_target_types', 'interfaces',
+                'attributes', 'properties', 'description', 'version',
+                 'credential', '_extensions')
 
     def __init__(self, type, capability_name=None, custom_def=None):
         super(RelationshipType, self).__init__(type, self.RELATIONSHIP_PREFIX,

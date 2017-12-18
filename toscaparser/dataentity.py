@@ -74,14 +74,18 @@ class DataEntity(object):
                         default_props[name] = prop_def.default
 
             # check allowed field
-            for value_key in list(self.value.keys()):
-                if value_key not in allowed_props:
-                    log.info("Unknown field data {}: {}".
-                             format(self.datatype.type, value_key))
-                    ExceptionCollector.appendException(
-                        UnknownFieldError(what=(_('Data value of type "%s"')
-                                                % self.datatype.type),
-                                          field=value_key))
+            try:
+                for value_key in list(self.value.keys()):
+                    if value_key not in allowed_props:
+                        log.info("Unknown field data {}: {}".
+                                 format(self.datatype.type, value_key))
+                        ExceptionCollector.appendException(
+                            UnknownFieldError(what=(_('Data value of type "%s"')
+                                                    % self.datatype.type),
+                                              field=value_key))
+            except Exception as e:
+                log.error("Value: {}: {}".format(self.value, e))
+                raise e
 
             # check default field
             for def_key, def_value in list(default_props.items()):

@@ -15,10 +15,10 @@ from toscaparser.common.exception import UnknownFieldError
 from toscaparser.elements.statefulentitytype import StatefulEntityType
 
 SECTIONS = (LIFECYCLE, CONFIGURE, LIFECYCLE_SHORTNAME,
-            CONFIGURE_SHORTNAME) = \
+            CONFIGURE_SHORTNAME, EXTENTIONS) = \
            ('tosca.interfaces.node.lifecycle.Standard',
             'tosca.interfaces.relationship.Configure',
-            'Standard', 'Configure')
+            'Standard', 'Configure', '_extensions')
 
 INTERFACEVALUE = (IMPLEMENTATION, INPUTS) = ('implementation', 'inputs')
 
