@@ -32,6 +32,7 @@ def load_yaml(path, a_file=True):
     try:
         f = codecs.open(path, encoding='utf-8', errors='strict') if a_file \
             else urllib.request.urlopen(path)
+        s = f.read()
     except urllib.error.URLError as e:
         if hasattr(e, 'reason'):
             msg = (_('Failed to reach server "%(path)s". Reason is: '
@@ -47,7 +48,10 @@ def load_yaml(path, a_file=True):
             return
     except Exception as e:
         raise
-    return yaml.load(f.read(), Loader=yaml_loader)
+    finally:
+        if f:
+            f.close()
+    return yaml.load(s, Loader=yaml_loader)
 
 
 def simple_parse(tmpl_str):

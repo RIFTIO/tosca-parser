@@ -206,6 +206,13 @@ class ExceptionCollector(object):
             raise exception
 
     @staticmethod
+    def removeException(exception_type):
+        if ExceptionCollector.collecting and ExceptionCollector.exceptions:
+            for i, e in enumerate(ExceptionCollector.exceptions):
+                if isinstance(e, exception_type):
+                    del ExceptionCollector.exceptions[i]
+
+    @staticmethod
     def exceptionsCaught():
         return len(ExceptionCollector.exceptions) > 0
 

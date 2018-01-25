@@ -25,7 +25,7 @@ class CapabilityTypeDef(StatefulEntityType):
         self.nodetype = ntype
         self.properties = None
         self.custom_def = custom_def
-        if self.PROPERTIES in self.defs:
+        if self.defs and self.PROPERTIES in self.defs:
             self.properties = self.defs[self.PROPERTIES]
         self.parent_capabilities = self._get_parent_capabilities(custom_def)
 

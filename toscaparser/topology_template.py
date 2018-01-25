@@ -67,7 +67,7 @@ class TopologyTemplate(object):
         inputs = []
         for name, attrs in self._tpl_inputs().items():
             log.debug("Input {}: {}".format(name, attrs))
-            input = Input(name, attrs)
+            input = Input(name, attrs, self.custom_defs)
             if self.parsed_params and name in self.parsed_params:
                 input.validate(self.parsed_params[name])
             else:
@@ -79,8 +79,12 @@ class TopologyTemplate(object):
             if (self.parsed_params and input.name not in self.parsed_params
                 or self.parsed_params is None) and input.required \
                     and input.default is None:
-                log.warning(_('The required parameter %s '
+                log.error(_('The required parameter %s '
                               'is not provided') % input.name)
+                exception.ExceptionCollector.appendException(
+                    exception.MissingRequiredParameterError(
+                        what='Template',
+                        input_name=input.name))
 
             inputs.append(input)
         return inputs

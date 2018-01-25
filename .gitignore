@@ -6,7 +6,9 @@
 # Packages
 *.egg
 *.egg-info
+.eggs
 dist
+deb_dist
 build
 eggs
 parts
@@ -17,6 +19,8 @@ develop-eggs
 .installed.cfg
 lib
 lib64
+cover
+tosca-parser-*.tar.gz
 
 # Installer logs
 pip-log.txt

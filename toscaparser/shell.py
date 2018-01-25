@@ -16,6 +16,7 @@ import logging
 import os
 import sys
 
+from toscaparser.common.exception import ValidationError
 from toscaparser.tosca_template import ToscaTemplate
 from toscaparser.utils.gettextutils import _
 import toscaparser.utils.urlutils
@@ -38,6 +39,8 @@ e.g.
 #tosca-parser
  --template-file=toscaparser/tests/data/CSAR/csar_hello_world.zip
 """
+
+log = logging.getLogger("tosca.model")
 
 
 class ParserShell(object):
@@ -62,48 +65,68 @@ class ParserShell(object):
                             required=True,
                             help=_('YAML template or CSAR file to parse.'))
 
-        parser.add_argument('-d', '--debug',
-                            required=False,
-                            action='store_true',
-                            help=('Enable debug logs'))
+        parser.add_argument('-nrpv', dest='no_required_paras_check',
+                            action='store_true', default=False,
+                            help=_('Ignore input parameter validation '
+                                   'when parse template.'))
+
+        parser.add_argument('--debug', dest='debug_mode',
+                            action='store_true', default=False,
+                            help=_('debug mode for print more details '
+                                   'other than raise exceptions when '
+                                   'errors happen as possible'))
+
         return parser
 
     def main(self, argv):
         parser = self.get_parser(argv)
         (args, extra_args) = parser.parse_known_args(argv)
-        if args.debug:
-            self.log.setLevel(logging.DEBUG)
         path = args.template_file
-        self.log.info("Template file: {}".format(path))
+        nrpv = args.no_required_paras_check
+        debug = args.debug_mode
+        if debug:
+            self.log.setLevel(logging.DEBUG)
+
         if os.path.isfile(path):
-            self.parse(path)
+            self.parse(path, no_required_paras_check=nrpv, debug_mode=debug)
         elif toscaparser.utils.urlutils.UrlUtils.validate_url(path):
-            self.parse(path, False)
+            self.parse(path, False,
+                       no_required_paras_check=nrpv,
+                       debug_mode=debug)
         else:
             raise ValueError(_('"%(path)s" is not a valid file.')
                              % {'path': path})
 
-    def parse(self, path, a_file=True):
-        output = None
-        tosca = ToscaTemplate(path, None, a_file)
+    def parse(self, path, a_file=True, no_required_paras_check=False,
+              debug_mode=False):
+        nrpv = no_required_paras_check
+        try:
+            tosca = ToscaTemplate(path, None, a_file,
+                                  no_required_paras_check=nrpv)
+        except ValidationError as e:
+            log.error(e.message)
+            if debug_mode:
+                print(e.message)
+            else:
+                raise e
 
-        version = tosca.version
-        if tosca.version:
+        version = tosca.version if tosca else "unknown"
+        if tosca and tosca.version:
             print("\nversion: " + version)
 
-        if hasattr(tosca, 'description'):
+        if tosca and hasattr(tosca, 'description'):
             description = tosca.description
             if description:
                 print("\ndescription: " + description)
 
-        if hasattr(tosca, 'inputs'):
+        if tosca and hasattr(tosca, 'inputs'):
             inputs = tosca.inputs
             if inputs:
                 print("\ninputs:")
                 for input in inputs:
                     print("\t" + input.name)
 
-        if hasattr(tosca, 'nodetemplates'):
+        if tosca and hasattr(tosca, 'nodetemplates'):
             nodetemplates = tosca.nodetemplates
             if nodetemplates:
                 print("\nnodetemplates:")
@@ -122,7 +145,7 @@ class ParserShell(object):
                         for trigger in policy.triggers:
                             print("\ttrigger name:" + trigger.name)'''
 
-        if hasattr(tosca, 'outputs'):
+        if tosca and hasattr(tosca, 'outputs'):
             outputs = tosca.outputs
             if outputs:
                 print("\noutputs:")

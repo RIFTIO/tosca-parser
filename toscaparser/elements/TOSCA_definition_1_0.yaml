@@ -934,6 +934,16 @@ policy_types:
     description: The TOSCA Policy Type definition that is used to govern
       placement of TOSCA nodes or groups of nodes.
 
+  tosca.policies.Placement.Colocate:
+    derived_from: tosca.policies.Placement
+    description: The TOSCA Policy Type definition that is used to govern
+      colocate placement of TOSCA nodes or groups of nodes.
+
+  tosca.policies.Placement.Antilocate:
+    derived_from: tosca.policies.Placement
+    description: The TOSCA Policy Type definition that is used to govern
+      anti-locate placement of TOSCA nodes or groups of nodes.
+
   tosca.policies.Scaling:
     derived_from: tosca.policies.Root
     description: The TOSCA Policy Type definition that is used to govern

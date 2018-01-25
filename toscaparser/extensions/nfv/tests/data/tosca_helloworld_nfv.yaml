@@ -7,23 +7,87 @@ metadata:
 
 topology_template:
   node_templates:
+    VNF1:
+      type: tosca.nodes.nfv.VNF
+      properties:
+        descriptor_id: vnf1
+        descriptor_version: 1.0
+        provider: acmetelco
+        software_version: 1.0
+        product_name: test_vnf1
+        vnfm_info: []
+      capabilities:
+        deployment_flavour:
+          properties:
+            flavour_id: test_flv
+            description: ...
+            vdu_profile:
+              VDU1:
+                min_number_of_instances: 1
+                max_number_of_instances: 10
+            instantiation_level:
+              min:
+                description: ...
+                vdu_levels:
+                  VDU1:
+                    number_of_instances: 1
+            default_instantiation_level_id: min
+
     VDU1:
       type: tosca.nodes.nfv.VDU.Compute
       properties:
-        name: vdu1
-        description: Test
-        configurable_properties: {}
+        name: test_vnf1
+        description: ...
+        boot_order: []
+        nfvi_constraints: []
+        configurable_properties:
+          additional_vnfc_configurable_properties: {}
+      capabilities:
+        virtual_compute:
+          properties:
+            virtual_memory:
+              virtual_mem_size: 8096 MB
+            virtual_cpu:
+              cpu_architecture: x86
+              num_virtual_cpu: 2
+              virtual_cpu_clock: 1800 MHz
+      requirements:
+        - virtual_storage: Storage1
 
+
+    Storage1:
+      type: tosca.nodes.nfv.VDU.VirtualStorage
+      properties:
+        type_of_storage: ..
+        size_of_storage: 10 GB
+        rdma_enabled:  false
+      artifacts:
+        sw_image:
+          name: Test image
+          version: 1.0
+          checksum: 9af30fce37a4c5c831e095745744d6d2
+          container_format: qcow2
+          disk_format: bare
+          min_disk: 2 GB
+          min_ram: 8096 MB
+          size: 2 GB
+          sw_image: test.image.v1.0.qcow2
+          supported_virtualisation_environments:
+            - KVM
     CP1:
       type: tosca.nodes.nfv.VduCpd
       properties:
         layer_protocol: ipv4
       requirements:
-        - virtual_link: PrivateNetwork
         - virtual_binding: VDU1
+        - virtual_link: PrivateNetwork
 
     PrivateNetwork:
-      type: tosca.nodes.nfv.VnfVirtualLinkDesc
+      type: tosca.nodes.nfv.VL
       properties:
         connectivity_type:
-            layer_protocol: ethernet
+          layer_protocol: ipv4
+          flow_pattern: mesh
+        test_access: []
+        description: ..
+        vl_flavours: {}

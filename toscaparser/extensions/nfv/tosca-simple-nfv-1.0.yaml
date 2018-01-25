@@ -43,6 +43,7 @@ artifact_types:
         description: >-
           Checksum of the software image file.
         type: string
+        required: true
       container_format:
         description: >-
           The container format describes the container file format in which software image is
@@ -103,10 +104,6 @@ capability_types:
       tosca.relationships.nfv.VirtualBindsTo relationship type.
     derived_from: tosca.capabilities.Node
 
-  tosca.capabilities.nfv.VirtualLinkable:
-    # NOTE: This is removed in CSD04 draft.
-    derived_from: tosca.capabilities.Node
-
   tosca.capabilities.nfv.Metric:
     _extensions:
       normative: true
@@ -150,6 +147,111 @@ capability_types:
           Describes virtual CPU(s) of the virtualized compute.
         type: tosca.datatypes.nfv.VirtualCpu
         required: true
+
+  tosca.capabilities.nfv.VirtualLinkable:
+    # PJ NOTE: This is removed in CSD04 draft. Readded by ONAP wd05
+    _extensions:
+      normative: true
+      shorthand_name: VirtualLinkable
+      type_qualified_name: tosca:VirtualLinkable
+      specification: tosca-simple-nfv-1.0
+      specification_section: ''
+      specification_url: ''
+    derived_from: tosca.capabilities.Root
+
+  tosca.capabilities.nfv.ExtVirtualLinkable:
+    # PJ NOTE: Added by ONAP wd05
+    _extensions:
+      normative: true
+      shorthand_name: ExtVirtualLinkable
+      type_qualified_name: tosca:ExtVirtualLinkable
+      specification: tosca-simple-nfv-1.0
+      specification_section: ''
+      specification_url: ''
+    derived_from: tosca.capabilities.Root
+
+  tosca.capabilities.nfv.VnfDeploymentFlavour:
+    # PJ NOTE: Added from NFV-IFA011
+    _extensions:
+      normative: true
+      shorthand_name: VnfDeploymentFlavour
+      type_qualified_name: tosca:VnfDeploymentFlavour
+      specification: ETSI NFV IFA 011
+      specification_section: 7.1.8
+      specification_url: ''
+    derived_from: tosca.capabilities.Root
+    description: >-
+      Describes a specific deployment version of a VNF
+    properties:
+      flavour_id:
+        description: >-
+          Identifier of this DF within the VNFD.
+        type: string
+        required: true
+      description:
+        description: >-
+          Human readable description of the DF.
+        type: string
+        required: true
+      vdu_profile:
+        description: >-
+          Describes additional instantiation data for the VDUs used in this flavour.
+        type: map
+        entry_schema:
+          type: tosca.datatypes.nfv.VduProfile
+        required: true
+      virtual_link_profile:
+        description: >-
+          Defines the internal VLD along with additional data.
+        type: map
+        entry_schema:
+          type: tosca.datatypes.nfv.VlProfile
+        required: false
+      instantiation_level:
+        description: >-
+          Describes the various levels of resources that can be used to instantiate
+          the VNF using this flavour.
+        type: map
+        entry_type:
+          type: tosca.datatypes.nfv.InstantiationLevel
+        required: true
+      default_instantiation_level_id:
+        description: >-
+           The "instantiationLevel" entry which defines the default instantiation level
+           for this DF. It shall be present if there are multiple "instantiationLevel" entries.
+        type: string
+      supported_operation:
+        description: >-
+          Indicates which operations are available for this DF via the VNF LCM interface.
+          Instantiate VNF, Query VNF and Terminate VNF are supported in all DF and therefore
+          need not be included in this list.
+        type: string
+        required: false
+      # lcm_operations_config:
+      #   description: >-
+      #     Configuration parameters for the VNF Lifecycle Management operations.
+      #   type: tosca.datatypes.nfv.VnfLcmOperationsConfiguration
+      #   required: true
+
+  tosca.capabilities.nfv.MonitoringParameters:
+    # PJ NOTE: Added from NFV-IFA011, added as a list
+    _extensions:
+      normative: true
+      shorthand_name: MonitoringParameter
+      type_qualified_name: tosca:MonitoringParameter
+      specification: ETSI NFV IFA 011
+      specification_section: 7.1.11
+      specification_url: ''
+    derived_from: tosca.capabilities.nfv.Metric
+    description: >-
+      Specifies the virtualised resource related performance metrics to be tracked by the VNFM.
+    properties:
+      parameters:
+        description: >-
+          List of monitoring parameters that can be monitored.
+        type: map
+        entry_schema:
+          type: tosca.datatypes.nfv.MonitoringParameter
 
 data_types:
 
@@ -271,7 +373,7 @@ data_types:
           Indicates whether fulfilling the constraint is mandatory (TRUE) for successful operation
           or desirable (FALSE).
         type: boolean
-        required: false
+        required: false # PJ NOTE: Aria has this marked as false, but spec says true
       requirement:
         description: >-
           Specifies a requirement such as the support of SR-IOV, a particular data plane
@@ -303,7 +405,7 @@ data_types:
       flow_pattern:
         description: >-
           Identifies the flow pattern of the connectivity (Line, Tree, Mesh).
-        type: string
+        type: string # PJ NOTE: LAtest ONAP wd05 has added contraints [ Line, Tree, Mesh ]
         required: false
 
   tosca.datatypes.nfv.RequestedAdditionalCapability:
@@ -465,7 +567,650 @@ data_types:
           type: string
         required: false
 
+  tosca.datatypes.nfv.VduProfile:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: VduProfile
+      type_qualified_name: tosca:VduProfile
+      specification: tosca-simple-nfv-1.0
+      specification_section: ''
+      specification_url: ''
+    description: >-
+      VduProfile describes additional instantiation data for a given VDU.Compute used in the a specific deployment flavour.
+    properties:
+      # Commented out in the definition of the spec
+      # vdu_id:
+      #   description: >-
+      #     Uniquely identify a VDU of VDU.Compute.
+      #   type: string
+      #   required: true
+      min_number_of_instances:
+        description: >-
+          Minimum number of instances of the VNFC based on this VDU.Compute that is permitted to exist for this flavour.
+        type: integer
+        required: true
+      max_number_of_instances:
+        description: >-
+          Maximum number of instances of the VNFC based on this VDU.Compute that is permitted to exist for this flavour.
+        type: integer
+        required: true
+
+  tosca.datatypes.nfv.VlProfile:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: VlProfile
+      type_qualified_name: tosca:VlProfile
+      specification: tosca-simple-nfv-1.0
+      specification_section: ''
+      specification_url: ''
+    description: >-
+      VlProfile describes additional instantiation data for a given VL used in a specific deployment flavour.
+    derived_from: tosca.datatypes.Root
+    properties:
+      #vnf_vl_desc_id:
+        # key of map containing the containing map
+      flavour_id:
+        description: >-
+          Identifies a flavour within the VnfVirtualLink
+        type: map
+        entry_schema:
+          type: string
+        required: true
+
+  tosca.datatypes.nfv.InstantiationLevel:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: InstantiationLevel
+      type_qualified_name: tosca:InstantiationLevel
+      specification: tosca-simple-nfv-1.0
+      specification_section: ''
+      specification_url: ''
+    description: >-
+      InstantiationLevel type describes a given level of resources to be instantiated within a deployment
+      flavour in term of the number VNFC instances to be created for each VDU.Compute.
+    derived_from: tosca.datatypes.Root
+    properties:
+      description:
+        description: >-
+          Human readable description of the level.
+        type: string
+        required: true
+      vdu_levels:
+        description: >-
+          Indicates the number of instance of this VDU to deploy for this level.
+        type: map # key: vduId
+        entry_schema:
+          type: tosca.datatypes.nfv.VduLevel
+        required: true
+      scale_info:
+        description: >-
+          Represents for each aspect the scale level that corresponds to this instantiation level.
+          scaleInfo shall be present if the VNF supports scaling.
+        type: map # key: aspectId
+        entry_schema:
+          type: tosca.datatypes.nfv.ScaleInfo
+        required: false
+
+  tosca.datatypes.nfv.VduLevel:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: VduLevel
+      type_qualified_name: tosca:VduLevel
+      specification: tosca-simple-nfv-1.0
+      specification_section: ''
+      specification_url: ''
+    description: >-
+      VduLevel type indicates for a given VDU.Compute in a given level the number of instances to deploy.
+    derived_from: tosca.datatypes.Root
+    properties:
+      number_of_instances:
+        description: >-
+          Number of instances of VNFC based on this VDU to deploy for this level.
+        type: integer
+        required: true
+
+  tosca.datatypes.nfv.VnfLcmOperationsConfiguration:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: VduLevel
+      type_qualified_name: tosca:VduLevel
+      specification: ETSI NFV IFA 011
+      specification_section: 7.1.5.2
+      specification_url: ''
+    description: >-
+      VnfLcmOperationsConfiguration represents information to configure lifecycle management operations
+      as specified in [ETSI GS NFV-IFA 007].
+    derived_from: tosca.datatypes.Root
+    properties:
+      instantiate:
+        description: >-
+          Configuration parameters for the InstantiateVnf operation.
+        type: tosca.datatypes.nfv.VnfInstantiateOperationConfiguration
+      scale:
+        description: >-
+          Configuration parameters for the ScaleVnf operation.
+        type: tosca.datatypes.nfv.VnfScaleOperationConfiguration
+      scale_to_level:
+        description: >-
+          Configuration parameters for the ScaleVnfToLevel operation.
+        type: tosca.datatypes.nfv.VnfScaleToLevelOperationConfiguration
+      heal:
+        description: >-
+          Configuration parameters for the HealVnf operation.
+        type: tosca.datatypes.nfv.VnfHealOperationConfiguration
+      terminate:
+        description: >-
+          Configuration parameters for the TerminateVnf operation.
+        type: tosca.datatypes.nfv.VnfTerminateOperationConfiguration
+      operate:
+        description: >-
+          Configuration parameters for the OperateVnf operation.
+        type: tosca.datatypes.nfv.VnfOperateOperationConfiguration
+      change_ext_connectivity: # PJ NOTE: Added from IFA 011
+        description: >-
+          Configuration parameters for the ChangeExtVnfConnectivity operation.
+        type: tosca.datatypes.nfv.changeExtVnfConnectivityOpConfig
+
+  tosca.datatypes.nfv.VnfInstantiateOperationConfiguration:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: VnfInstantiateOperationConfiguration
+      type_qualified_name: tosca:VnfInstantiateOperationConfiguration
+      specification: ETSI NFV IFA 011
+      specification_section: 7.1.5.3
+      specification_url: ''
+    description: >-
+      VnfInstantiateOperationConfiguration represents information that affect the invocation of the
+      InstantiateVnf operation.
+    derived_from: tosca.datatypes.Root
+    properties:
+      parameter:
+        # modeled as part of operation parameter list
+        description: >-
+          VNF-specific parameter to be passed when invoking the InstantiateVnf operation.
+        type: map # PJ NOTE: Type not specified in spec
+        required: false
+
+  tosca.datatypes.nfv.VnfScaleOperationConfiguration:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: VnfScaleOperationConfiguration
+      type_qualified_name: tosca:VnfScaleOperationConfiguration
+      specification: ETSI NFV IFA 011
+      specification_section: 7.1.5.4
+      specification_url: ''
+    description: >-
+      VnfScaleOperationConfiguration represents information that affect the invocation of the ScaleVnf operation.
+    derived_from: tosca.datatypes.Root
+    properties:
+      parameter:
+        # modeled as part of operation parameter list
+        description: >-
+          VNF-specific parameter to be passed when invoking the ScaleVnf operation.
+        type: map # PJ NOTE: Type not specified in spec
+        required: false
+      scaling_by_more_than_one_step_supported:
+        description: >-
+          Signals whether passing a value larger than one in the numScalingSteps parameter of the ScaleVnf
+          operation is supported by this VNF.
+          Default is FALSE, i.e. "not supported".
+        type: boolean
+        required: false
+
+  tosca.datatypes.nfv.VnfScaleToLevelOperationConfiguration:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: VnfScaleToLevelOperationConfiguration
+      type_qualified_name: tosca:VnfScaleToLevelOperationConfiguration
+      specification: ETSI NFV IFA 011
+      specification_section: 7.1.5.5
+      specification_url: ''
+    description: >-
+      VnfScaleToLevelOperationConfiguration represents information that affect the invocation of the
+      ScaleVnfToLevel operation.
+    derived_from: tosca.datatypes.Root
+    properties:
+      parameter:
+        # modeled as part of operation parameter list
+        description: >-
+          VNF-specific parameter to be passed when invoking the ScaleVnfToLevel operation.
+        type: map # PJ NOTE: Type not specified in spec
+        required: false
+      arbitrary_target_levels_supported:
+        description: >-
+          Signals whether scaling according to the parameter "scaleInfo" is supported by this VNF.
+        type: boolean
+        required: false
+
+  tosca.datatypes.nfv.VnfHealOperationConfiguration:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: VnfHealOperationConfiguration
+      type_qualified_name: tosca:VnfHealOperationConfiguration
+      specification: ETSI NFV IFA 011
+      specification_section: 7.1.5.6
+      specification_url: ''
+    description: >-
+      VnfHealOperationConfiguration represents information that affect the invocation of the
+      HealVnf operation.
+    derived_from: tosca.datatypes.Root
+    properties:
+      parameter:
+        # modeled as part of operation parameter list
+        description: >-
+          VNF-specific parameter to be passed when invoking the HealVnf operation.
+        type: map # PJ NOTE: Type not specified in spec
+        required: false
+      cause:
+        description: >-
+          Supported "cause" parameter values.
+        type: list
+        entry_schema:
+          type: string
+        required: false
+
+  tosca.datatypes.nfv.VnfTerminateOperationConfiguration:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: VnfTerminateOperationConfiguration
+      type_qualified_name: tosca:VnfTerminateOperationConfiguration
+      specification: ETSI NFV IFA 011
+      specification_section: 7.1.5.7
+      specification_url: ''
+    description: >-
+      VnfTerminateOperationConfiguration represents information that affect the invocation of the
+      TerminateVnf operation.
+    derived_from: tosca.datatypes.Root
+    properties:
+      min_graceful_termination_timeout:
+        description: >-
+          Minimum timeout value for graceful termination of a VNF instance.
+        type: integer
+        required: true
+      max_recommended_graceful_termination_timeout:
+        description: >-
+          Maximum recommended timeout value that can be needed to gracefully terminate a VNF instance
+          of a particular type under certain conditions, such as maximum load condition. This is
+          provided by VNF provider as information for the operator facilitating the selection of
+          optimal timeout value. This value is not used as constraint.
+        type: integer
+        required: false
+      parameter:
+        # modeled as part of operation parameter list
+        description: >-
+          VNF-specific parameter to be passed when invoking the TerminateVnf operation.
+        type: map # PJ NOTE: Type not specified in spec
+        required: false
+
+  tosca.datatypes.nfv.VnfOperateOperationConfiguration:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: VnfOperateOperationConfiguration
+      type_qualified_name: tosca:VnfOperateOperationConfiguration
+      specification: tosca-simple-nfv-1.0
+      specification_section: ''
+      specification_url: ''
+    description: >-
+      VnfOperateOperationConfiguration represents information that affect the invocation of the
+      OperateVnf operation.
+    derived_from: tosca.datatypes.Root
+    properties:
+      min_graceful_stop_timeout:
+        description: >-
+          Minimum timeout value for graceful stop of a VNF instance.
+        type: integer
+        required: true
+      max_recommended_graceful_stop_timeout:
+        description: >-
+          Maximum recommended timeout value that can be needed to gracefully terminate a VNF instance
+          of a particular type under certain conditions, such as maximum load condition. This is
+          provided by VNF provider as information for the operator facilitating the selection of
+          optimal timeout value. This value is not used as constraint.
+        type: integer
+        required: false
+      parameter:
+        # modeled as part of operation parameter list
+        description: >-
+          VNF-specific parameter to be passed when invoking the OperateVnf operation.
+        type: map # PJ NOTE: Type not specified in spec
+        required: false
+
+  tosca.datatypes.nfv.VnfChangeFlavourOpConfig:
+    # PJ NOTE: Added from NFV-IFA011
+    _extensions:
+      normative: true
+      shorthand_name: VnfChangeFlavourOpConfig
+      type_qualified_name: tosca:VnfChangeFlavourOpConfig
+      specification: ETSI NFV IFA 011
+      specification_section: 7.1.5.9
+      specification_url: ''
+    description: >-
+      VnfChangeFlavourOpConfig represents information that affect the invocation of the
+      ChangeVnfFlavour operation.
+    derived_from: tosca.datatypes.Root
+    properties:
+      parameter:
+        # modeled as part of operation parameter list
+        description: >-
+          VNF-specific parameter to be passed when invoking the ChangeVnfFlavour operation.
+        type: map # PJ NOTE: Type not specified in spec
+        required: false
+
+  tosca.datatypes.nfv.VnfChangeExtConnectivityOpConfig:
+    # PJ NOTE: Added from NFV-IFA011
+    _extensions:
+      normative: true
+      shorthand_name: VnfChangeExtConnectivityOpConfig
+      type_qualified_name: tosca:VnfChangeExtConnectivityOpConfig
+      specification: ETSI NFV IFA 011
+      specification_section: 7.1.5.10
+      specification_url: ''
+    description: >-
+      VnfChangeExtConnectivityOpConfig represents information that affect the invocation of the
+      ChangeExtVnfConnectivity operation.
+    derived_from: tosca.datatypes.Root
+    properties:
+      parameter:
+        # modeled as part of operation parameter list
+        description: >-
+          VNF-specific parameter to be passed when invoking the ChangeExtVnfConnectivity operation.
+        type: map # PJ NOTE: Type not specified in spec
+        required: false
+
+  tosca.datatypes.nfv.ScaleInfo:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: ScaleInfo
+      type_qualified_name: tosca:ScaleInfo
+      specification: tosca-simple-nfv-1.0
+      specification_section: ''
+      specification_url: ''
+    description: >-
+      The scaleInfo indicates for a given scaleAspect the corresponding scaleLevel.
+    derived_from: tosca.datatypes.Root
+    properties:
+      scaleLevel:
+        description: >-
+          The scale level for a particular aspect.
+        type: integer
+        required: true
+
+  tosca.datatypes.nfv.ScalingAspect:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: ScalingAspect
+      type_qualified_name: tosca:ScalingAspect
+      specification: tosca-simple-nfv-1.0
+      specification_section: ''
+      specification_url: ''
+    description: >-
+      ScalingAspect describes the details of an aspect used for horizontal scaling.
+    derived_from: tosca.datatypes.Root
+    properties:
+      name:
+        description: >-
+          Human readable name of the aspect.
+        type: string
+        required: true
+      description:
+        description: >-
+          Human readable description of the aspect.
+        type: string
+        required: true
+      associated_group:
+        description: >-
+          Reference to the group of Vnfd elements defining this aspect.
+        type: string # Identifier
+        required: false
+      max_scale_level:
+        description: >-
+          Total number of scaling steps that can be applied w.r.t. this aspect. The value of
+          this property corresponds to the number of scaling steps can be applied to this
+          aspect when scaling it from the minimum scale level (i.e. 0) to the maximum scale
+          level defined by this property.
+        type: integer # PositiveInteger
+        required: true
+
+  tosca.datatypes.nfv.VnfdElementGroup:
+    # PJ NOTE: Added from NFV-IFA011
+    _extensions:
+      normative: true
+      shorthand_name: VnfdElementGroup
+      type_qualified_name: tosca:VnfdElementGroup
+      specification: ETSI NFV IFA 011
+      specification_section: 7.1.4
+      specification_url: ''
+    description: >-
+      A VNFD Element Group is a mechanism for associating elements of a VNFD (Vdus and
+      VnfVirtualLinkDesc(s)) for a certain purpose, for example, scaling aspects.
+    derived_from: tosca.datatypes.Root
+    properties:
+      vnfdElementGroupId:
+        description: >-
+          Unique identifier of this group in the VNFD.
+        type: string
+        required: true
+      description:
+        description: >-
+          Human readable description of the group.
+        type: string
+        required: true
+      vdu:
+        description: >-
+          References to Vdus that are part of this group.
+        type: list
+        entry_schema:
+          type: string # VDU IDs
+        required: true
+      virtualLinkDesc:
+        description: >-
+          References to VnfVirtualLinkDesc that are part of this group.
+        type: list
+        entry_schema:
+          type: string # VNF VL IDs
+        required: true
+
+  tosca.datatypes.nfv.MonitoringParameter:
+    # PJ NOTE: Added from NFV-IFA011
+    _extensions:
+      normative: true
+      shorthand_name: MonitoringParameter
+      type_qualified_name: tosca:MonitoringParameter
+      specification: ETSI NFV IFA 011
+      specification_section: 7.1.11
+      specification_url: ''
+    derived_from: tosca.datatypes.Root
+    description: >-
+      Specifies the virtualised resource related performance metrics to be tracked by the VNFM.
+    properties:
+      # id:
+      #   description: >-
+      #     Unique identifier of the monitoring parameter.
+      #   type: string
+      #   required: true
+      name:
+        description: >-
+          Human readable name of the monitoring parameter.
+        type: string
+        required: false
+      performance_metric:
+        description: >-
+          Identifies the virtualised resource performance metric.
+        type: string
+        required: true
+
 node_types:
+
+  tosca.nodes.nfv.VNF:
+      # PJ NOTE: Added from NFV-SOL001v0040
+      _extensions:
+        normative: true
+        shorthand_name: VNF
+        type_qualified_name: tosca:VNF
+        specification: tosca-simple-nfv-1.0
+        specification_section: ''
+        specification_url: ''
+      description: >-
+        The NFV Virtualized Network Function (VNF) node type describes a VNF in terms of
+        deployment and operational behaviour requirements, which it contains connectivity,
+        interfaces and virtualised resource requirements, as defined by ETSI GS NFV-IFA 011 [0].
+      derived_from: tosca.nodes.Root
+      properties:
+        descriptor_id: # instead of vnfd_id
+          description: >-
+            Identifier of this VNFD information element. This attribute shall be globally unique.
+            The format will be defined in the data model specification phase.
+            The VNFD Identifier shall be used as the unique identifier of the VNF Package that
+            contains this VNFD. Any modification of the content of the VNFD or the VNF Package
+            shall result in a new VNFD Identifier.
+          type: string # GUID
+          required: true
+        descriptor_version: # instead of vnfd_version
+          description: >-
+            Identifies the version of the VNFD.
+          type: string
+          required: true
+        provider: # instead of vnf_provider
+          description: >-
+            Provider of the VNF and of the VNFD.
+          type: string
+          required: true
+        product_name: # instead of vnf_product_name
+          description: >-
+            Name to identify the VNF Product. Invariant for the VNF Product lifetime.
+          type: string
+          required: true
+        software_version: # instead of vnf_software_version
+          description: >-
+            Software version of the VNF. This is changed when there is any change to the
+            software that is included in the VNF Package.
+          type: string
+          required: true
+        product_info_name: # instead of vnf_product_info_name
+          description: >-
+            Human readable name for the VNF Product. Can change during the VNF Product lifetime.
+          type: string
+          required: false
+        product_info_description: # instead of vnf_product_info_description
+          description: >-
+            Human readable description of the VNF Product. Can change during the VNF Product lifetime.
+          type: string
+          required: false
+        vnfm_info:
+          description: >-
+            Identifies VNFM(s) compatible with the VNF described in this version of the VNFD.
+          type: list
+          entry_schema:
+            type: string
+          required: true
+        localization_languages:
+          description: >-
+            Information about localization languages of the VNF (includes e.g. strings in the VNFD).
+            This allows to provide one or more localization languages to support selecting a
+            specific localization language at VNF instantiation time.
+          type: list
+          entry_schema:
+            type: string
+          required: false
+        default_localization_language:
+          description: >-
+            Default localization language that is instantiated if no information about selected
+            localization language is available.
+            Shall be present if "localizationLanguage" is present and shall be absent otherwise.
+          type: string
+          required: false
+      capabilities:
+        # PJ NOTE: Commented out as the type is not defined
+        # vnf:
+        #   description: >-
+        #     Describes the capabilities of VNF.
+        #   type: tosca.capabilities.nfv.VNF
+        deployment_flavour:
+          description: >-
+            Describes specific deployment flavour of a VNF with specific requirement for capacity
+            and performance.
+          # PJ NOTE: Should this be a list to support multiple DFs as per IFA
+          type: tosca.capabilities.nfv.VnfDeploymentFlavour
+        # monitoring_parameter:
+        #   # modelled as ad hoc capabilities in VNF node template
+        #   description: >-
+        #     Monitoring parameters, which can be tracked for a VNF
+        #   type: map
+      requirements:
+        - virtual_link:
+            description: >-
+              Describes the requirements for linking to virtual link.
+            type: tosca.capabilities.nfv.VirtualLinkable
+            relationship: tosca.relationships.nfv.VirtualLinksTo
+            node: tosca.nodes.nfv.VL
+            occurrences: [ 0, UNBOUNDED ]
+     # Editor note: interfaces/operation are needed to be defined in the vnf node type.
+     # still under discussion:
+     # interfaces:
+     #   Basic: # not to collide with Standard on tosca.nodes.Root
+     #     type: tosca.interfaces.nfv.vnf.lifecycle.Basic
+     #   Healable:
+     #     type: tosca.interfaces.nfv.vnf.lifecycle.Healable
+     #   Scalable:
+     #     type: tosca.interfaces.nfv.vnf.lifecycle.Scalable
+
+  tosca.nodes.nfv.VnfExtCpd:
+    # PJ NOTE: Added from NFV-SOL001v0040
+    _extensions:
+      normative: true
+      shorthand_name: VnfExtCpd
+      type_qualified_name: tosca:VnfExtCpd
+      specification: tosca-simple-nfv-1.0
+      specification_section: ''
+      specification_url: ''
+    description: >-
+      The VnfExtCpd node represents a logical external connection point, exposed by this VNF enabling
+      connecting with Virtual Link, as defined in ETSI GS NFV-IFA 011.
+    derived_from: tosca.nodes.nfv.Cpd
+    properties:
+      virtual_network_interface_requirements:
+        description: >-
+          The actual virtual NIC requirements that is been assigned when instantiating the connection point.
+        type: list
+        entry_schema:
+          type: tosca.datatypes.nfv.VirtualNetworkInterfaceRequirements
+        required: false
+    requirements:
+      - external_virtual_link:
+          description: >-
+            Describes the requirements for linking to virtual link.
+          capability: tosca.capabilities.nfv.VirtualLinkable
+          relationship: tosca.relationships.nfv.VirtualLinksTo
+          node: tosca.nodes.nfv.VL
+          occurrences: [ 0, 1 ] # PJ NOTE: Not mentioned in spec
+      - internal_connection_point: #name in ETSI NFV IFA011 v0.7.3 intCpd
+          description: >-
+            Describes the requirements for internal connection point.
+          capability: tosca.capabilities.nfv.VirtualLinkable
+          relationship:
+          node: tosca.nodes.nfv.VduCpd
+          occurrences: [ 0, 1 ] # XOR with internalVirtualLink
+      # Editor note: confirmation of the requirement for modelling internal connection points as a separate node is FFS.
+      - internal_virtual_link: #name in ETSI NFV IFA011 v0.7.3 intVirtualLinkDesc
+          description: >-
+            Describes the requirements for internal virtual link.
+          capability: tosca.capabilities.nfv.VirtualLinkable
+          relationship: tosca.relationships.nfv.VirtualLinksTo
+          node: tosca.nodes.nfv.VL
+          occurrences: [ 0, 1 ] # XOR with internal_connection_point
 
   tosca.nodes.nfv.VDU.Compute:
     _extensions:
@@ -522,22 +1267,23 @@ node_types:
       # ARIA NOTE: The attributes are only described in section [5.9.2.5 Definition], but are not
       # mentioned in section [5.9.2.2 Attributes]. Additionally, it does not seem to make sense to
       # deprecate inherited attributes, as it breaks the inheritence contract.
-      private_address:
-        type: string
-        status: deprecated
-      public_address:
-        type: string
-        status: deprecated
-      networks:
-        type: map
-        entry_schema:
-          type: tosca.datatypes.network.NetworkInfo
-        status: deprecated
-      ports:
-        type: map
-        entry_schema:
-          type: tosca.datatypes.network.PortInfo
-        status: deprecated
+      # PJ NOTE: Commented out as it is deprecated in spec example
+      # private_address:
+      #   type: string
+      #   status: deprecated
+      # public_address:
+      #   type: string
+      #   status: deprecated
+      # networks:
+      #   type: map
+      #   entry_schema:
+      #     type: tosca.datatypes.network.NetworkInfo
+      #   status: deprecated
+      # ports:
+      #   type: map
+      #   entry_schema:
+      #     type: tosca.datatypes.network.PortInfo
+      #   status: deprecated
     capabilities:
       virtual_compute:
         description: >-
@@ -547,24 +1293,33 @@ node_types:
         description: >-
           Defines ability of VirtualBindable.
         type: tosca.capabilities.nfv.VirtualBindable
+        occurences: [ 1, UNBOUND ] # PJ NOTE: From ONAP wd05
       monitoring_parameter:
         # ARIA NOTE: commented out in 5.9.2.5
         description: >-
           Monitoring parameter, which can be tracked for a VNFC based on this VDU. Examples include:
           memory-consumption, CPU-utilisation, bandwidth-consumption, VNFC downtime, etc.
-        type: tosca.capabilities.nfv.Metric
-    #requirements:
+        type: tosca.capabilities.nfv.MonitoringParameters
+    requirements:
       # ARIA NOTE: virtual_storage is TBD
 
       # ARIA NOTE: csd04 attempts to deprecate the inherited local_storage requirement, but this
       # is not possible in TOSCA
+      # PJ NOTE: Added based on ONAP wd05
+      - virtual_storage:
+          description: >-
+            Describes storage requirements for a virtual_storage instance attached to the virtualization
+            container created from virtual_compute defined for this vdu.
+          type: tosca.nodes.nfv.VDU.VirtualStorage
+          required: false
+
     artifacts:
-      sw_image:
-        description: >-
-          Describes the software image which is directly loaded on the virtualization container
-          realizing this virtual storage.
-        file: '' # ARIA NOTE: missing value even though it is required in TOSCA
-        type: tosca.artifacts.nfv.SwImage
+      - sw_image:
+          description: >-
+            Describes the software image which is directly loaded on the virtualization container
+            realizing this virtual storage.
+          file: '' # ARIA NOTE: missing value even though it is required in TOSCA
+          type: tosca.artifacts.nfv.SwImage
 
   tosca.nodes.nfv.VDU.VirtualStorage:
     _extensions:
@@ -580,6 +1335,11 @@ node_types:
       [ETSI NFV IFA011].
     derived_from: tosca.nodes.Root
     properties:
+      # id:
+      #   descripton: >-
+      #     Unique identifier of the virtualStorage.
+      #   type: string # PJ NOTE: Not provided in spec
+      #   required: true
       type_of_storage:
         description: >-
           Type of virtualized storage resource.
@@ -595,13 +1355,19 @@ node_types:
           Indicate if the storage support RDMA.
         type: boolean
         required: false
+    capabilities:
+      # PJ NOTE: The type is not defined
+      # virtual_storage:
+      #   description: >-
+      #     Defines the capabilities of virtual_storage.
+      #   type: tosca.capabilities.nfv.VirtualStorage
     artifacts:
       sw_image:
         description: >-
           Describes the software image which is directly loaded on the virtualization container
           realizing this virtual storage.
         file: '' # ARIA NOTE: missing in spec
-        type: tosca.artifacts.nfv.SwImage
+        type: tosca.artifacts.Deployment.Image
 
   tosca.nodes.nfv.Cpd:
     _extensions:
@@ -672,7 +1438,7 @@ node_types:
           this CPD.
         type: list
         entry_schema:
-          type: VirtualNetworkInterfaceRequirements
+          type: tosca.datatypes.nfv.VirtualNetworkInterfaceRequirements
         required: false
     requirements:
      # ARIA NOTE: seems to be a leftover from csd03
@@ -680,17 +1446,19 @@ node_types:
          description: Describes the requirements for linking to virtual link
          capability: tosca.capabilities.nfv.VirtualLinkable
          relationship: tosca.relationships.nfv.VirtualLinksTo
-         node: tosca.nodes.nfv.VnfVirtualLinkDesc
+         node: tosca.nodes.nfv.VL
       - virtual_binding:
+          descripton: >-
+            Describe the requirement for binding with VDU.
           capability: tosca.capabilities.nfv.VirtualBindable
           relationship: tosca.relationships.nfv.VirtualBindsTo
           node: tosca.nodes.nfv.VDU.Compute # ARIA NOTE: seems wrong in spec
 
-  tosca.nodes.nfv.VnfVirtualLinkDesc:
+  tosca.nodes.nfv.VL:
     _extensions:
       normative: true
-      shorthand_name: VnfVirtualLinkDesc
-      type_qualified_name: tosca:VnfVirtualLinkDesc
+      shorthand_name: VL
+      type_qualified_name: tosca:VL
       specification: tosca-simple-nfv-1.0
       specification_section: 5.9.6
       specification_url: 'http://docs.oasis-open.org/tosca/tosca-nfv/v1.0/csd04/tosca-nfv-v1.0-csd04.html#_Toc482896083'
@@ -713,13 +1481,93 @@ node_types:
         description: >-
           Test access facilities available on the VL (e.g. none, passive, monitoring, or active
           (intrusive) loopbacks at endpoints.
-        type: string
+        type: list
         required: false
+      vl_flavours:
+        description: >-
+          Describe a specific flavour of the VL with specific bitrate requirements.
+        type: map
+        entry_schema:
+          type: tosca.datatypes.nfv.VlFlavour
+        required: true
     capabilities:
       # monitoring_parameters:
       # modeled as ad hoc (named) capabilities in node template
+      monitoring_parameter:
+        description: >-
+          Monitoring parameter, which can be tracked for virtualized resource on VL level.
+        type: tosca.capabilities.nfv.MonitoringParameters
       virtual_linkable:
+        description: >-
+          Defines ability of VirtualLinkable.
         type: tosca.capabilities.nfv.VirtualLinkable
+
+  tosca.nodes.nfv.VDU.Composition:
+    # PJ NOTE: Added in wd05
+    _extensions:
+      normative: true
+      shorthand_name: VDU.Composition
+      type_qualified_name: tosca:VDU.Composition
+      specification: tosca-simple-nfv-1.0
+      specification_section: 5.9.7
+      specification_url: ''
+    derived_from: tosca.nodes.root
+    properties:
+      name:
+        description: >-
+          Human readable name of the Vdu.
+        type: string
+        required: true
+      description:
+        description: >-
+          Human readable description of the Vdu.
+        type: string
+        required: true
+      boot_order:
+        description: >-
+          The key indicates the boot index (lowest index defines highest boot priority). The Value references
+          a descriptor from which a valid boot device is created e.g. VirtualStorageDescriptor from which a
+          VirtualStorage instance is created.
+          If no boot order is defined the default boot order defined in the VIM or NFVI shall be used.
+        type: list
+        entry_schema:
+          type: string
+        required: false
+      nfvi_constraints:
+        descripton: >-
+          Describes constraints on the NFVI for the VNFC instance(s) created from this Vdu. For example,
+          aspects of a secure hosting environment for the VNFC instance that involve additional entities
+          or processes. More software images can be attached to the virtualization container using
+          virtual_storage.
+        type: list
+        entry_schema:
+          type: string
+        required: false
+      configurable_properties:
+        description: >-
+          Describes the configurable properties of all VNFC instances based on this VDU.
+        type: map
+        entry_schema:
+            type: tosca.datatypes.nfv.VnfcConfigurableProperties
+        required: true 
+    capabilities:
+      virtual_compute:
+        description: >-
+          Describes virtual compute resources capabilities.
+        type: tosca.capabilities.nfv.VirtualCompute
+      virtual_storage:
+        description: >-
+          Defines the capabilities of virtual_storage.
+        type: tosca.capabilities.nfv.VirtualStorage
+        occurrences: [0,UNBOUNDED]
+    requirements:
+      - virtual_link:
+          description: >-
+            Describes the requirements for linking to virtual link.
+          capability: tosca.capabilities.nfv.VirtualLinkable
+          relationship: tosca.relationships.nfv.VirtualLinksTo
+          node: tosca.nodes.nfv.VL
+          occurrences: [1,UNBOUNDED]  # PJ NOTE: The spec says required no in wd05
 
 relationship_types:
 
@@ -736,11 +1584,6 @@ relationship_types:
     derived_from: tosca.relationships.DependsOn
     valid_target_types: [ tosca.capabilities.nfv.VirtualBindable ]
 
-  tosca.relationships.nfv.VirtualLinksTo:
-    # NOTE: removed in CSD04 draft
-    derived_from: tosca.relationships.DependsOn
-    valid_target_types: [ tosca.capabilities.nfv.VirtualLinkable ]
-
   # ARIA NOTE: csd04 lacks the definition of tosca.relationships.nfv.Monitor (the derived_from and
   # valid_target_types), so we are using the definition in csd03 section 8.4.2.
   tosca.relationships.nfv.Monitor:
@@ -756,3 +1599,8 @@ relationship_types:
       node types.
     derived_from: tosca.relationships.ConnectsTo
     valid_target_types: [ tosca.capabilities.nfv.Metric ]
+
+  tosca.relationships.nfv.VirtualLinksTo:
+    # PJ NOTE: removed in CSD04 draft, added by ONAP wd05
+    derived_from: tosca.relationships.DependsOn
+    valid_target_types: [ tosca.capabilities.nfv.VirtualLinkable ]

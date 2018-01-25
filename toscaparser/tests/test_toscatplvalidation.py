@@ -100,7 +100,8 @@ class ToscaTemplateValidationTest(TestCase):
             exception.InvalidTemplateVersion,
             _('The template version "tosca_simple_yaml_1_10 in '
               'custom_types/imported_sample.yaml" is invalid. '
-              'Valid versions are "tosca_simple_yaml_1_0, tosca_simple_profile_for_nfv_1_0_csd03, '
+              'Valid versions are "tosca_simple_yaml_1_0, tosca_simple_yaml_1_1, '
+              'tosca_simple_profile_for_nfv_1_0_csd03, '
               'tosca_simple_profile_for_nfv_1_0, tosca_simple_profile_for_nfv_1_0_0".'))
         exception.ExceptionCollector.assertExceptionMessage(
             exception.UnknownFieldError,

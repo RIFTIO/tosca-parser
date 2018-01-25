@@ -49,7 +49,7 @@ class NodeTemplate(EntityTemplate):
         self.available_rel_tpls = available_rel_tpls
         self.available_rel_types = available_rel_types
         self._relationships = {}
-        self.sub_mapping_tosca_template = None
+        self.substitution_mapped = None
         log.debug("Nodetemplate: {}".format(name))
 
     @property

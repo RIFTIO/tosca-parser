@@ -18,6 +18,9 @@ from copy import deepcopy
 from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import InvalidTemplateVersion
 from toscaparser.common.exception import MissingRequiredFieldError
+from toscaparser.common.exception import MissingRequiredInputError
+from toscaparser.common.exception import MissingRequiredOutputError
+from toscaparser.common.exception import MissingRequiredParameterError
 from toscaparser.common.exception import UnknownFieldError
 from toscaparser.common.exception import ValidationError
 from toscaparser.elements.entity_type import update_definitions
@@ -55,25 +58,31 @@ YAML_LOADER = toscaparser.utils.yamlparser.load_yaml
 class ToscaTemplate(object):
     exttools = ExtTools()
 
-    VALID_TEMPLATE_VERSIONS = ['tosca_simple_yaml_1_0']
+    VALID_TEMPLATE_VERSIONS = ['tosca_simple_yaml_1_0',
+                               'tosca_simple_yaml_1_1']
 
     VALID_TEMPLATE_VERSIONS.extend(exttools.get_versions())
 
-    ADDITIONAL_SECTIONS = {'tosca_simple_yaml_1_0': SPECIAL_SECTIONS}
+    ADDITIONAL_SECTIONS = {'tosca_simple_yaml_1_0': SPECIAL_SECTIONS,
+                           'tosca_simple_yaml_1_1': SPECIAL_SECTIONS}
 
     ADDITIONAL_SECTIONS.update(exttools.get_sections())
 
     '''Load the template data.'''
     def __init__(self, path=None, parsed_params=None, a_file=True,
-                 yaml_dict_tpl=None):
-
-        ExceptionCollector.start()
+                 yaml_dict_tpl=None, sub_mapped_node_template=None,
+                 no_required_paras_check=False):
+        if sub_mapped_node_template is None:
+            ExceptionCollector.start()
         self.a_file = a_file
         self.input_path = None
         self.path = None
         self.tpl = None
+        self.sub_mapped_node_template = sub_mapped_node_template
         self.nested_tosca_tpls_with_topology = {}
         self.nested_tosca_templates_with_topology = []
+        self.no_required_paras_check = no_required_paras_check
+
         if path:
             self.input_path = path
             self.path = self._get_path(path)
@@ -112,7 +121,8 @@ class ToscaTemplate(object):
                 self._handle_nested_tosca_templates_with_topology()
                 self.graph = ToscaGraph(self.nodetemplates)
 
-        ExceptionCollector.stop()
+        if sub_mapped_node_template is None:
+            ExceptionCollector.stop()
         self.verify_template()
 
     def _topology_template(self):
@@ -120,7 +130,7 @@ class ToscaTemplate(object):
                                 self._get_all_custom_defs(),
                                 self.relationship_types,
                                 self.parsed_params,
-                                None)
+                                self.sub_mapped_node_template)
 
     def _inputs(self):
         return self.topology_template.inputs
@@ -234,20 +244,33 @@ class ToscaTemplate(object):
                 if self._is_sub_mapped_node(nodetemplate, tosca_tpl):
                     parsed_params = self._get_params_for_nested_template(
                         nodetemplate)
-                    topology_tpl = tosca_tpl.get(TOPOLOGY_TEMPLATE)
-                    topology_with_sub_mapping = TopologyTemplate(
-                        topology_tpl,
-                        self._get_all_custom_defs(),
-                        self.relationship_types,
-                        parsed_params,
-                        nodetemplate)
-                    if topology_with_sub_mapping.substitution_mappings:
-                        # Record nested topo templates in top level template
+
+                    cache_exeptions = deepcopy(ExceptionCollector.exceptions)
+                    cache_exeptions_state = \
+                        deepcopy(ExceptionCollector.collecting)
+                    nested_template = None
+                    try:
+                        nrpv = self.no_required_paras_check
+                        nested_template = ToscaTemplate(
+                            path=fname, parsed_params=parsed_params,
+                            sub_mapped_node_template=nodetemplate,
+                            no_required_paras_check=nrpv)
+                    except ValidationError as e:
+                        log.error(e.message)
+                        raise e
+
+                    ExceptionCollector.exceptions = deepcopy(cache_exeptions)
+                    ExceptionCollector.collecting = \
+                        deepcopy(cache_exeptions_state)
+
+                    if nested_template and \
+                            nested_template._has_substitution_mappings():
+                        # Record the nested templates in top level template
                         self.nested_tosca_templates_with_topology.\
-                            append(topology_with_sub_mapping)
-                        # Set substitution mapping object for mapped node
-                        nodetemplate.sub_mapping_tosca_template = \
-                            topology_with_sub_mapping.substitution_mappings
+                            append(nested_template)
+                        # Set the substitution toscatemplate for mapped node
+                        nodetemplate.substitution_mapped = \
+                            nested_template
 
     def _validate_field(self):
         version = self._tpl_version()
@@ -272,7 +295,8 @@ class ToscaTemplate(object):
                     what=version,
                     valid_versions=', '. join(self.VALID_TEMPLATE_VERSIONS)))
         else:
-            if version != 'tosca_simple_yaml_1_0':
+            if (version != 'tosca_simple_yaml_1_0' and
+                    version != 'tosca_simple_yaml_1_1'):
                 update_definitions(version)
 
     def _get_path(self, path):
@@ -291,18 +315,26 @@ class ToscaTemplate(object):
                            % {'path': path}))
 
     def verify_template(self):
+        if self.no_required_paras_check:
+            ExceptionCollector.removeException(
+                MissingRequiredParameterError)
+            ExceptionCollector.removeException(
+                MissingRequiredInputError)
+            ExceptionCollector.removeException(
+                MissingRequiredOutputError)
         if ExceptionCollector.exceptionsCaught():
             if self.input_path:
-                raise ValidationError(
+                exceptions = ValidationError(
                     message=(_('\nThe input "%(path)s" failed validation with '
                                'the following error(s): \n\n\t')
                              % {'path': self.input_path}) +
                     '\n\t'.join(ExceptionCollector.getExceptionsReport()))
             else:
-                raise ValidationError(
+                exceptions = ValidationError(
                     message=_('\nThe pre-parsed input failed validation with '
                               'the following error(s): \n\n\t') +
                     '\n\t'.join(ExceptionCollector.getExceptionsReport()))
+            raise exceptions
         else:
             if self.input_path:
                 msg = (_('The input "%(path)s" successfully passed '
@@ -314,7 +346,7 @@ class ToscaTemplate(object):
 
     def _is_sub_mapped_node(self, nodetemplate, tosca_tpl):
         """Return True if the nodetemple is substituted."""
-        if (nodetemplate and not nodetemplate.sub_mapping_tosca_template and
+        if (nodetemplate and not nodetemplate.substitution_mapped and
                 self.get_sub_mapping_node_type(tosca_tpl) == nodetemplate.type
                 and len(nodetemplate.interfaces) < 1):
             return True

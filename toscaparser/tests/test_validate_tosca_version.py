@@ -19,6 +19,9 @@ from toscaparser.utils.validateutils import TOSCAVersionProperty
 
 class TOSCAVersionPropertyTest(TestCase):
 
+    def setUp(self):
+        TestCase.setUp(self)
+
     def test_tosca_version_property(self):
         version = '18.0.3.beta-1'
         expected_output = '18.0.3.beta-1'

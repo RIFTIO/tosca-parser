@@ -17,6 +17,7 @@ from toscaparser.common.exception import InvalidNodeTypeError
 from toscaparser.common.exception import MissingDefaultValueError
 from toscaparser.common.exception import MissingRequiredFieldError
 from toscaparser.common.exception import MissingRequiredInputError
+from toscaparser.common.exception import MissingRequiredOutputError
 from toscaparser.common.exception import UnknownFieldError
 from toscaparser.common.exception import UnknownOutputError
 from toscaparser.elements.nodetype import NodeType
@@ -224,3 +225,16 @@ class SubstitutionMappings(object):
                         where=_('SubstitutionMappings with node_type ')
                         + self.node_type,
                         output_name=output.name))
+
+        # The observable attributes of the substituted node template
+        # have to be defined as attributes of the node type or outputs in
+        # the topology template, the attributes in tosca.node.root are
+        # optional.
+        for attribute in self.node_definition.get_attributes_def():
+            if attribute not in [output.name for output in self.outputs] \
+               and attribute not in self.OPTIONAL_OUTPUTS:
+                ExceptionCollector.appendException(
+                    MissingRequiredOutputError(
+                        what=_('SubstitutionMappings with node_type ')
+                        + self.node_type,
+                        output_name=attribute))
