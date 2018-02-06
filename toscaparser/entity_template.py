@@ -81,6 +81,15 @@ class EntityTemplate(object):
         self._requirements = None
         self._capabilities = None
 
+    def __str__(self):
+        s = "{}:\n".format(self.name)
+        s += "\ttype: {}\n".format(self.type)
+        s += "\tproperties: {}\n".format(self.get_properties())
+        s += "\trequirements: {}\n".format(self.requirements)
+        s += "\tcapabilites: {}\n".format(self.get_capabilities())
+        s += "\tinterfaces: {}\n".format(self.interfaces)
+        return s
+
     @property
     def type(self):
         if self.type_definition:

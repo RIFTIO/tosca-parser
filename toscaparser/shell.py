@@ -103,6 +103,9 @@ class ParserShell(object):
         try:
             tosca = ToscaTemplate(path, None, a_file,
                                   no_required_paras_check=nrpv)
+
+            if debug_mode:
+                print("Tosca parsed:\n{}\n\n".format(str(tosca)))
         except ValidationError as e:
             log.error(e.message)
             if debug_mode:

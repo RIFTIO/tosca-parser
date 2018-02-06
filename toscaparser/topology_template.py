@@ -213,6 +213,28 @@ class TopologyTemplate(object):
         return self.substitution_mappings.requirements \
             if self.substitution_mappings else None
 
+    def __str__(self):
+        if not self.tpl:
+            return ''
+
+        s = "type: {}\n".format(self.nodetype())
+        if self.nodetemplates:
+            for t in self.nodetemplates:
+                s += "{}".format(t)
+        if self.relationship_templates:
+            for t in self.relationship_templates:
+                s += "{}".format(t)
+        if self.groups:
+            for t in self.groups:
+                s += "{}".format(t)
+        if self.policies:
+            for t in self.policies:
+                s += "{}".format(t)
+        if self.substitution_mappings:
+            for t in self.substitution_mappings:
+                s += "{}".format(t)
+        return s
+
     def _tpl_description(self):
         description = self.tpl.get(DESCRIPTION)
         if description:

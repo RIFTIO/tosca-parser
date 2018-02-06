@@ -125,6 +125,14 @@ class ToscaTemplate(object):
             ExceptionCollector.stop()
         self.verify_template()
 
+    def __str__(self):
+        if self.tpl:
+            s = "Description: {}\n".format(self.description)
+            s += "Version: {}\n".format(self.version)
+            s += "{}".format(self.topology_template)
+            return s
+        return ''
+
     def _topology_template(self):
         return TopologyTemplate(self._tpl_topology_template(),
                                 self._get_all_custom_defs(),
