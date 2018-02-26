@@ -48,6 +48,8 @@ class SubstitutionMappings(object):
         self.custom_defs = custom_defs or {}
         self._validate()
 
+        # self.type_definition = NodeType(self.type, custom_defs)
+        # self._properties = None
         self._capabilities = None
         self._requirements = None
 
@@ -76,6 +78,51 @@ class SubstitutionMappings(object):
     @property
     def node_definition(self):
         return NodeType(self.node_type, self.custom_defs)
+
+    # Needed to support TOSCA Simple YAML 1.2
+    # def get_properties_objects(self):
+    #     '''Return properties objects for this template.'''
+    #     if self._properties is None:
+    #         self._properties = self._create_properties()
+    #     return self._properties
+    #
+    # def get_properties(self):
+    #     '''Return a dictionary of property name-object pairs.'''
+    #     return {prop.name: prop
+    #             for prop in self.get_properties_objects()}
+    #
+    # def get_property_value(self, name):
+    #     '''Return the value of a given property name.'''
+    #     props = self.get_properties()
+    #     if props and name in props.keys():
+    #             return props[name].value
+    #
+    # def _create_properties(self):
+    #     props = []
+    #     properties = self.type_definition.get_value(self.PROPERTIES,
+    #                                                 self.sub_mapping_def) or {}
+    #     for name, value in properties.items():
+    #         props_def = self.type_definition.get_properties_def()
+    #         if props_def and name in props_def:
+    #             prop = Property(name, value,
+    #                             props_def[name].schema, self.custom_def)
+    #             props.append(prop)
+    #     for p in self.type_definition.get_properties_def_objects():
+    #         if p.default is not None and p.name not in properties.keys():
+    #             prop = Property(p.name, p.default, p.schema, self.custom_def)
+    #             props.append(prop)
+    #     return props
+
+    def __str__(self):
+        s = "Substitution Mappings:\n"
+        # s += "\tproperties: {}\n".format({prop.name: prop.value
+        #         for prop in self.get_properties_objects()})
+        s += "\ttype: {}\n".format(self.type)
+        s += "\trequirements: {}\n".format(self.requirements)
+        s += "\tcapabilites: {}\n".format(self.capabilities)
+        s += "\tinputs: {}\n".format(self.inputs)
+        return s
+
 
     def _validate(self):
         # Basic validation

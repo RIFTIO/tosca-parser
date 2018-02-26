@@ -40,7 +40,7 @@ e.g.
  --template-file=toscaparser/tests/data/CSAR/csar_hello_world.zip
 """
 
-log = logging.getLogger("tosca.model")
+log = logging.getLogger("tosca-parser")
 
 
 class ParserShell(object):
@@ -102,7 +102,8 @@ class ParserShell(object):
         nrpv = no_required_paras_check
         try:
             tosca = ToscaTemplate(path, None, a_file,
-                                  no_required_paras_check=nrpv)
+                                  no_required_paras_check=nrpv,
+                                  debug=debug_mode)
 
             if debug_mode:
                 print("Tosca parsed:\n{}\n\n".format(str(tosca)))
@@ -110,6 +111,7 @@ class ParserShell(object):
             log.error(e.message)
             if debug_mode:
                 print(e.message)
+                return
             else:
                 raise e
 

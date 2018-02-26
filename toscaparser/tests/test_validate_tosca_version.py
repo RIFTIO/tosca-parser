@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import (
     InvalidTOSCAVersionPropertyException)
 from toscaparser.tests.base import TestCase
@@ -21,6 +22,7 @@ class TOSCAVersionPropertyTest(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
+        ExceptionCollector.stop()  # Added as sometimes negative testcases fails.
 
     def test_tosca_version_property(self):
         version = '18.0.3.beta-1'

@@ -47,6 +47,16 @@ class Policy(EntityTemplate):
             self.properties = policy['properties']
         self._validate_keys()
 
+    def __str__(self):
+        s = "{}:\n".format(self.name)
+        s += "\ttype: {}\n".format(self.type)
+        s += "\tproperties: {}\n".format({prop.name: prop.value
+                for prop in self.get_properties_objects()})
+        s += "\ttargets: {}\n".format(self.targets)
+        s += "\ttarget_type: {}\n".format(self.get_targets_type())
+        s += "\ttriggers: {}\n".format(self.triggers)
+        return s
+
     @property
     def targets(self):
         return self.entity_tpl.get('targets')

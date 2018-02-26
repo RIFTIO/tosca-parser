@@ -18,7 +18,7 @@ import os
 from toscaparser.common.exception import ToscaExtAttributeError
 from toscaparser.common.exception import ToscaExtImportError
 
-log = logging.getLogger("tosca.model")
+log = logging.getLogger("tosca-parser")
 
 REQUIRED_ATTRIBUTES = ['VERSION', 'DEFS_FILE']
 

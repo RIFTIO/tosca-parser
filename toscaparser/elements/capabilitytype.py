@@ -10,8 +10,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
 from toscaparser.elements.property_definition import PropertyDef
 from toscaparser.elements.statefulentitytype import StatefulEntityType
+
+log = logging.getLogger('tosca-parser')
 
 
 class CapabilityTypeDef(StatefulEntityType):
@@ -20,6 +24,8 @@ class CapabilityTypeDef(StatefulEntityType):
 
     def __init__(self, name, ctype, ntype, custom_def=None):
         self.name = name
+        if ctype is None:
+            log.error("Name: {} has type: {}".format(name, ctype))
         super(CapabilityTypeDef, self).__init__(ctype, self.CAPABILITY_PREFIX,
                                                 custom_def)
         self.nodetype = ntype

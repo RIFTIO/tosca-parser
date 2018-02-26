@@ -254,6 +254,8 @@ class NodeTemplate(EntityTemplate):
                                                 self.entity_tpl)
         if ifaces:
             for name, value in ifaces.items():
+                log.debug("Interface: {}: {}, type: {}".format(
+                    name, value, self.type_definition))
                 if name in (LIFECYCLE, LIFECYCLE_SHORTNAME):
                     self._common_validate_field(
                         value, InterfacesDef.

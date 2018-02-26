@@ -135,6 +135,7 @@ class TopologyTemplate(object):
     def _policies(self):
         policies = []
         for policy in self._tpl_policies():
+            log.debug("Policy: {}".format(policy))
             for policy_name, policy_tpl in policy.items():
                 target_list = policy_tpl.get('targets')
                 target_objects = []
@@ -217,7 +218,9 @@ class TopologyTemplate(object):
         if not self.tpl:
             return ''
 
-        s = "type: {}\n".format(self.nodetype())
+        s = ""
+        if self.substitution_mappings:
+            s += "{}".format(self.substitution_mappings)
         if self.nodetemplates:
             for t in self.nodetemplates:
                 s += "{}".format(t)
@@ -229,9 +232,6 @@ class TopologyTemplate(object):
                 s += "{}".format(t)
         if self.policies:
             for t in self.policies:
-                s += "{}".format(t)
-        if self.substitution_mappings:
-            for t in self.substitution_mappings:
                 s += "{}".format(t)
         return s
 

@@ -185,7 +185,7 @@ class ToscaDefTest(TestCase):
              relation, node in network_port_type.relationship.items()])
 
     def test_interfaces(self):
-        self.assertIsNone(compute_type.interfaces)
+        self.assertIn(ifaces.LIFECYCLE_SHORTNAME, compute_type.interfaces)
         root_node = NodeType('tosca.nodes.Root')
         self.assertIn(ifaces.LIFECYCLE_SHORTNAME, root_node.interfaces)
 

@@ -17,21 +17,21 @@ topology_template:
         product_name: test_vnf1
         vnfm_info: []
       capabilities:
-        deployment_flavour:
-          properties:
-            flavour_id: test_flv
-            description: ...
-            vdu_profile:
-              VDU1:
-                min_number_of_instances: 1
-                max_number_of_instances: 10
-            instantiation_level:
-              min:
-                description: ...
-                vdu_levels:
-                  VDU1:
-                    number_of_instances: 1
-            default_instantiation_level_id: min
+        # deployment_flavour:
+        #   properties:
+        #     flavour_id: test_flv
+        #     description: ...
+        #     vdu_profile:
+        #       VDU1:
+        #         min_number_of_instances: 1
+        #         max_number_of_instances: 10
+        #     instantiation_level:
+        #       min:
+        #         description: ...
+        #         vdu_levels:
+        #           VDU1:
+        #             number_of_instances: 1
+        #     default_instantiation_level_id: min
 
     VDU1:
       type: tosca.nodes.nfv.VDU.Compute
@@ -83,7 +83,7 @@ topology_template:
         - virtual_link: PrivateNetwork
 
     PrivateNetwork:
-      type: tosca.nodes.nfv.VL
+      type: tosca.nodes.nfv.VnfVirtualLinkDesc
       properties:
         connectivity_type:
           layer_protocol: ipv4

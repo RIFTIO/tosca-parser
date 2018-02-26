@@ -13,6 +13,7 @@
 
 import logging
 import os
+import sys
 
 from copy import deepcopy
 from toscaparser.common.exception import ExceptionCollector
@@ -50,7 +51,7 @@ SECTIONS = (DEFINITION_VERSION, DEFAULT_NAMESPACE, TEMPLATE_NAME,
 # Sections that are specific to individual template definitions
 SPECIAL_SECTIONS = (METADATA) = ('metadata')
 
-log = logging.getLogger("tosca.model")
+log = logging.getLogger("tosca-parser")
 
 YAML_LOADER = toscaparser.utils.yamlparser.load_yaml
 
@@ -71,7 +72,20 @@ class ToscaTemplate(object):
     '''Load the template data.'''
     def __init__(self, path=None, parsed_params=None, a_file=True,
                  yaml_dict_tpl=None, sub_mapped_node_template=None,
-                 no_required_paras_check=False):
+                 no_required_paras_check=False, debug=False):
+        # Set the global logging level
+        fmt = logging.Formatter(
+            '%(asctime)-23s %(levelname)-5s  (%(name)s@%(process)d:' \
+            '%(filename)s:%(lineno)d) - %(message)s')
+        stderr_handler = logging.StreamHandler(stream=sys.stderr)
+        stderr_handler.setFormatter(fmt)
+        log = logging.getLogger("tosca-parser")
+        if debug:
+            log.setLevel(logging.DEBUG)
+        else:
+            log.setLevel(logging.ERROR)
+        log.addHandler(stderr_handler)
+
         if sub_mapped_node_template is None:
             ExceptionCollector.start()
         self.a_file = a_file

@@ -88,10 +88,10 @@ class NodeType(StatefulEntityType):
                             # we need to lookup the node type using
                             # the capability type
                             value = req
+                            log.debug("Req: {}".format(req))
                             if isinstance(value, dict):
                                 captype = value['capability']
-                                value = (self.
-                                         _get_node_type_by_cap(captype))
+                                value = (self._get_node_type_by_cap(captype))
                             keyword = key
                             node_type = value
                         log.debug("{}: RelationshipType: {}, {}, {}".
@@ -121,7 +121,8 @@ class NodeType(StatefulEntityType):
                 node_def = self.TOSCA_DEF[node_type]
             else:
                 node_def = self.custom_def[node_type]
-            if isinstance(node_def, dict) and 'capabilities' in node_def:
+            if isinstance(node_def, dict) and 'capabilities' in node_def and node_def['capabilities']:
+                log.debug("Node def: {}".format(node_def))
                 node_caps = node_def['capabilities']
                 for value in node_caps.values():
                     if isinstance(value, dict) and \
@@ -154,6 +155,7 @@ class NodeType(StatefulEntityType):
         '''Return a list of capability objects.'''
         typecapabilities = []
         caps = self.get_value(self.CAPABILITIES, None, True)
+        log.debug("Capabilites: {}".format(caps))
         if caps:
             # 'name' is symbolic name of the capability
             # 'value' is a dict { 'type': <capability type name> }
@@ -176,9 +178,26 @@ class NodeType(StatefulEntityType):
     def get_all_requirements(self):
         return self.requirements
 
+    def get_artifacts_objects(self):
+        '''Return a list of artifacts'''
+        artifacts = []
+        arts = self.get_value(self.ARTIFACTS, None, True)
+        if arts:
+            for name, value in arts.items():
+                ctype = value.get('type')
+                art = ArtifactTypeDef(name, ctype, self.type, self.custom_def)
+                artifacts.append(art)
+        return artifacts
+
+    def get_artifacts(self):
+        '''Return a dictionary of artifacts name-objects pairs.'''
+        return {art.name: art
+                for art in self.get_artifacts_objects()}
+
     @property
     def interfaces(self):
-        return self.get_value(self.INTERFACES)
+        log.debug("Defs: {}".format(self.custom_def))
+        return self.get_value(self.INTERFACES, None, True)
 
     @property
     def lifecycle_inputs(self):

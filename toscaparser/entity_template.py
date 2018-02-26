@@ -12,6 +12,7 @@
 
 import logging
 
+from toscaparser.artifacts import Artifact
 from toscaparser.capabilities import Capability
 from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import MissingRequiredFieldError
@@ -80,14 +81,19 @@ class EntityTemplate(object):
         self._interfaces = None
         self._requirements = None
         self._capabilities = None
+        self._artifacts = None
 
     def __str__(self):
         s = "{}:\n".format(self.name)
         s += "\ttype: {}\n".format(self.type)
-        s += "\tproperties: {}\n".format(self.get_properties())
+        s += "\tproperties: {}\n".format({prop.name: prop.value
+                for prop in self.get_properties_objects()})
         s += "\trequirements: {}\n".format(self.requirements)
         s += "\tcapabilites: {}\n".format(self.get_capabilities())
-        s += "\tinterfaces: {}\n".format(self.interfaces)
+        s += "\tinterfaces:\n"
+        for i in self.interfaces:
+            s += "\t\t{}\n".format(i)
+        s += "\tartifacts: {}\n".format(self.artifacts)
         return s
 
     @property
@@ -130,6 +136,14 @@ class EntityTemplate(object):
         if self._interfaces is None:
             self._interfaces = self._create_interfaces()
         return self._interfaces
+
+    @property
+    def artifacts(self):
+        if self._artifacts is None:
+            self._artifacts = self.type_definition.get_value(
+                self.ARTIFACTS,
+                self.entity_tpl) or []
+        return self._artifacts
 
     def get_capabilities_objects(self):
         '''Return capabilities objects for this template.'''

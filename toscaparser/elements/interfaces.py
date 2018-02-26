@@ -68,6 +68,10 @@ class InterfacesDef(StatefulEntityType):
             else:
                 self.implementation = value
 
+    def __str__(self):
+        return "type: {}, name: {}, value: {}". format(
+            self.type, self.name, self.value)
+
     @property
     def lifecycle_ops(self):
         if self.defs:
