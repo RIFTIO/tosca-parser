@@ -76,6 +76,12 @@ class ParserShell(object):
                                    'other than raise exceptions when '
                                    'errors happen as possible'))
 
+        parser.add_argument('--verbose', dest='verbose',
+                            action='store_true', default=False,
+                            help=_('verbose mode for print more details '
+                                   'when raising exceptions as '
+                                   'errors happen.'))
+
         return parser
 
     def main(self, argv):
@@ -84,11 +90,14 @@ class ParserShell(object):
         path = args.template_file
         nrpv = args.no_required_paras_check
         debug = args.debug_mode
+        verbose = args.verbose
         if debug:
+            verbose = True
             self.log.setLevel(logging.DEBUG)
 
         if os.path.isfile(path):
-            self.parse(path, no_required_paras_check=nrpv, debug_mode=debug)
+            self.parse(path, no_required_paras_check=nrpv,
+                       debug_mode=debug, verbose=verbose)
         elif toscaparser.utils.urlutils.UrlUtils.validate_url(path):
             self.parse(path, False,
                        no_required_paras_check=nrpv,
@@ -98,12 +107,12 @@ class ParserShell(object):
                              % {'path': path})
 
     def parse(self, path, a_file=True, no_required_paras_check=False,
-              debug_mode=False):
+              debug_mode=False, verbose=False):
         nrpv = no_required_paras_check
         try:
             tosca = ToscaTemplate(path, None, a_file,
                                   no_required_paras_check=nrpv,
-                                  debug=debug_mode)
+                                  debug=debug_mode, verbose=verbose)
 
             if debug_mode:
                 print("Tosca parsed:\n{}\n\n".format(str(tosca)))

@@ -62,4 +62,4 @@ class TypeValidation(object):
             ExceptionCollector.appendException(
                 InvalidTemplateVersion(
                     what=version + ' in ' + str(self.import_def),
-                    valid_versions=', '. join(self.VALID_TEMPLATE_VERSIONS)))
+                    valid_versions=', '. join(sorted(self.VALID_TEMPLATE_VERSIONS))))

@@ -41,7 +41,7 @@ class CSARPrereqTest(TestCase):
         self.assertEqual(_('"%s" is not a valid zip file.') % path, str(error))
 
     def test_url_is_zip(self):
-        path = "https://github.com/openstack/tosca-parser/raw/master/" \
+        path = "https://raw.githubusercontent.com/openstack/tosca-parser/master/" \
                "toscaparser/tests/data/CSAR/csar_not_zip.zip"
         csar = CSAR(path, False)
         error = self.assertRaises(ValidationError, csar.validate)
@@ -116,14 +116,19 @@ class CSARPrereqTest(TestCase):
     def test_csar_invalid_import_url(self):
         path = os.path.join(self.base_path,
                             "data/CSAR/csar_wordpress_invalid_import_url.zip")
+        invalid_file = ("https://raw.githubusercontent.com/openstack/tosca-parser/"
+                        "master/toscaparser/tests/data/CSAR/"
+                        "tosca_single_instance_wordpress/Definitions/wordpress1.yaml")
         csar = CSAR(path)
         error = self.assertRaises(URLException, csar.validate)
-        self.assertEqual(_('Failed to reach server '
-                           '"https://raw.githubusercontent.com/openstack/'
-                           'tosca-parser/master/toscaparser/tests/data/CSAR/'
-                           'tosca_single_instance_wordpress/Definitions/'
-                           'wordpress1.yaml". Reason is: Not Found.'),
-                         str(error))
+        # self.assertEqual(_('Failed to reach server '
+        #                    '"https://raw.githubusercontent.com/openstack/'
+        #                    'tosca-parser/master/toscaparser/tests/data/CSAR/'
+        #                    'tosca_single_instance_wordpress/Definitions/'
+        #                    'wordpress1.yaml". Reason is: Not Found.'),
+        #                  str(error))
+        self.assertIn(_('Request error "{path}": Reason is 404 Client Error'.
+                        format(path=invalid_file)), str(error))
         self.assertTrue(csar.temp_dir is None or
                         not os.path.exists(csar.temp_dir))
 

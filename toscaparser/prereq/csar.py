@@ -10,9 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os.path
+import os
 import requests
 import shutil
+from six.moves import urllib
 import six
 import tempfile
 import yaml
@@ -61,8 +62,7 @@ class CSAR(object):
                     ValidationError(message=missing_err_msg))
                 return False
             else:
-                response = requests.get(self.path)
-                self.csar = BytesIO(response.content)
+                self.csar = BytesIO(UrlUtils.get_url(self.path).content)
 
         # validate that it is a valid zip file
         if not zipfile.is_zipfile(self.csar):

@@ -12,13 +12,15 @@
 
 import codecs
 from collections import OrderedDict
-
+import os
+import requests
 from six.moves import urllib
 import yaml
 
 from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import URLException
 from toscaparser.utils.gettextutils import _
+from toscaparser.utils.urlutils import UrlUtils
 
 
 if hasattr(yaml, 'CSafeLoader'):
@@ -29,23 +31,33 @@ else:
 
 def load_yaml(path, a_file=True):
     f = None
+
     try:
-        f = codecs.open(path, encoding='utf-8', errors='strict') if a_file \
-            else urllib.request.urlopen(path)
-        s = f.read()
-    except urllib.error.URLError as e:
-        if hasattr(e, 'reason'):
-            msg = (_('Failed to reach server "%(path)s". Reason is: '
-                     '%(reason)s.')
-                   % {'path': path, 'reason': e.reason})
-            ExceptionCollector.appendException(URLException(what=msg))
-            return
-        elif hasattr(e, 'code'):
-            msg = (_('The server "%(path)s" couldn\'t fulfill the request. '
-                     'Error code: "%(code)s".')
-                   % {'path': path, 'code': e.code})
-            ExceptionCollector.appendException(URLException(what=msg))
-            return
+        if a_file:
+            f = codecs.open(path, encoding='utf-8', errors='strict')
+            s = f.read()
+        else:
+
+            s = UrlUtils.get_url(path).content
+
+    except requests.exceptions.Timeout as e:
+        msg = (_('Timeout reaching server "%(path)s": Reason is %(reason)s.') %
+               {'path': path, 'reason': e})
+        ExceptionCollector.appendException(URLException(what=msg))
+        return
+
+    except requests.exceptions.ConnectionError as e:
+        msg = (_('Error reaching server "%(path)s": Reason is %(reason)s.') %
+               {'path': path, 'reason': e})
+        ExceptionCollector.appendException(URLException(what=msg))
+        return
+
+    except requests.exceptions.HTTPError as e:
+        msg = (_('Request error "%(path)s": Reason is %(reason)s.') %
+               {'path': path, 'reason': e})
+        ExceptionCollector.appendException(URLException(what=msg))
+        return
+
     except Exception as e:
         raise
     finally:

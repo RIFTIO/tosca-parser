@@ -504,7 +504,7 @@ class ToscaTemplateTest(TestCase):
                                                      "cpus": 4}))
 
     def test_csar_parsing_elk_url_based(self):
-        csar_archive = ('https://github.com/openstack/tosca-parser/raw/master/'
+        csar_archive = ('https://raw.githubusercontent.com/openstack/tosca-parser/master/'
                         'toscaparser/tests/data/CSAR/csar_elk.zip')
         self.assertTrue(ToscaTemplate(csar_archive, a_file=False,
                                       parsed_params={"my_cpus": 4}))
@@ -540,7 +540,7 @@ class ToscaTemplateTest(TestCase):
             "data/test_multiple_validation_errors.yaml")
         self.assertRaises(exception.ValidationError, ToscaTemplate, tosca_tpl,
                           None)
-        valid_versions = ', '.join(ToscaTemplate.VALID_TEMPLATE_VERSIONS)
+        valid_versions = ', '.join(sorted(ToscaTemplate.VALID_TEMPLATE_VERSIONS))
         err1_msg = (_('The template version "tosca_simple_yaml_1" is invalid. '
                       'Valid versions are "%s".') % valid_versions)
         exception.ExceptionCollector.assertExceptionMessage(

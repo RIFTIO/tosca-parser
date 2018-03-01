@@ -11,6 +11,7 @@
 #    under the License.
 
 from toscaparser.common import exception
+from toscaparser.common.exception import ExceptionCollector
 from toscaparser.elements.artifacttype import ArtifactTypeDef
 from toscaparser.elements.entity_type import EntityType
 from toscaparser.elements.grouptype import GroupType
@@ -45,6 +46,10 @@ group_type = GroupType('tosca.groups.Root')
 
 
 class ToscaDefTest(TestCase):
+    def setUp(self):
+        TestCase.setUp(self)
+        ExceptionCollector.stop()  # Added as sometimes negative testcases fails.
+
     def test_type(self):
         self.assertEqual(compute_type.type, "tosca.nodes.Compute")
         self.assertRaises(exception.InvalidTypeError, NodeType,

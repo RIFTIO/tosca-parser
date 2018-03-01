@@ -11,17 +11,18 @@
 #    under the License.
 
 
+import os
 from six.moves.urllib.parse import urljoin
 from six.moves.urllib.parse import urlparse
 from toscaparser.common.exception import ExceptionCollector
 from toscaparser.utils.gettextutils import _
-
-try:
-    # Python 3.x
-    import urllib.request as urllib2
-except ImportError:
-    # Python 2.x
-    import urllib2
+import requests
+# try:
+#     # Python 3.x
+#     import urllib.request as urllib2
+# except ImportError:
+#     # Python 2.x
+#     import urllib2
 
 
 class UrlUtils(object):
@@ -62,4 +63,25 @@ class UrlUtils(object):
         Returns true if the get call returns a 200 response code.
         Otherwise, returns false.
         """
-        return urllib2.urlopen(url).getcode() == 200
+        # return urllib2.urlopen(url).getcode() == 200
+        r = requests.get(url, proxies=UrlUtils.get_proxies(url))
+        r.raise_for_status()
+        return r.status_code == 200
+
+    # NOTE: (Philip Joseph) Hack to make debian package build time unit test
+    # run to pass.
+    @staticmethod
+    def get_proxies(url):
+        """Get proxy configured or return no_proxy for host in url."""
+        proxies = {}
+        if os.getenv('HTTPS_PROXY') is None and os.getenv('HTTP_PROXY') is None:
+            o = urlparse(url)
+            proxies={'no_proxy': o.netloc}
+        return proxies
+
+    @staticmethod
+    def get_url(url):
+        """Open the url and return a response object."""
+        r = requests.get(url, proxies=UrlUtils.get_proxies(url))
+        r.raise_for_status()
+        return r

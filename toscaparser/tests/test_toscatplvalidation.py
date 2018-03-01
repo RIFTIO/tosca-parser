@@ -100,9 +100,8 @@ class ToscaTemplateValidationTest(TestCase):
             exception.InvalidTemplateVersion,
             _('The template version "tosca_simple_yaml_1_10 in '
               'custom_types/imported_sample.yaml" is invalid. '
-              'Valid versions are "tosca_simple_yaml_1_0, tosca_simple_yaml_1_1, '
-              'tosca_simple_profile_for_nfv_1_0_csd03, '
-              'tosca_simple_profile_for_nfv_1_0, tosca_simple_profile_for_nfv_1_0_0".'))
+              'Valid versions are "{}".'.format(
+                  ', '. join(sorted(ToscaTemplate.VALID_TEMPLATE_VERSIONS)))))
         exception.ExceptionCollector.assertExceptionMessage(
             exception.UnknownFieldError,
             _('Template custom_types/imported_sample.yaml contains unknown '
@@ -1436,7 +1435,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
             os.path.dirname(os.path.abspath(__file__)),
             "data/test_invalid_template_version.yaml")
         self.assertRaises(exception.ValidationError, ToscaTemplate, tosca_tpl)
-        valid_versions = ', '.join(ToscaTemplate.VALID_TEMPLATE_VERSIONS)
+        valid_versions = ', '.join(sorted(ToscaTemplate.VALID_TEMPLATE_VERSIONS))
         exception.ExceptionCollector.assertExceptionMessage(
             exception.InvalidTemplateVersion,
             (_('The template version "tosca_xyz" is invalid. Valid versions '

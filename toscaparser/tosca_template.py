@@ -72,7 +72,7 @@ class ToscaTemplate(object):
     '''Load the template data.'''
     def __init__(self, path=None, parsed_params=None, a_file=True,
                  yaml_dict_tpl=None, sub_mapped_node_template=None,
-                 no_required_paras_check=False, debug=False):
+                 no_required_paras_check=False, debug=False, verbose=False):
         # Set the global logging level
         fmt = logging.Formatter(
             '%(asctime)-23s %(levelname)-5s  (%(name)s@%(process)d:' \
@@ -85,6 +85,7 @@ class ToscaTemplate(object):
         else:
             log.setLevel(logging.ERROR)
         log.addHandler(stderr_handler)
+        self.verbose = verbose
 
         if sub_mapped_node_template is None:
             ExceptionCollector.start()
@@ -315,7 +316,7 @@ class ToscaTemplate(object):
             ExceptionCollector.appendException(
                 InvalidTemplateVersion(
                     what=version,
-                    valid_versions=', '. join(self.VALID_TEMPLATE_VERSIONS)))
+                    valid_versions=', '. join(sorted(self.VALID_TEMPLATE_VERSIONS))))
         else:
             if (version != 'tosca_simple_yaml_1_0' and
                     version != 'tosca_simple_yaml_1_1'):
@@ -350,12 +351,12 @@ class ToscaTemplate(object):
                     message=(_('\nThe input "%(path)s" failed validation with '
                                'the following error(s): \n\n\t')
                              % {'path': self.input_path}) +
-                    '\n\t'.join(ExceptionCollector.getExceptionsReport()))
+                    '\n\t'.join(ExceptionCollector.getExceptionsReport(full=self.verbose)))
             else:
                 exceptions = ValidationError(
                     message=_('\nThe pre-parsed input failed validation with '
                               'the following error(s): \n\n\t') +
-                    '\n\t'.join(ExceptionCollector.getExceptionsReport()))
+                    '\n\t'.join(ExceptionCollector.getExceptionsReport(full=self.verbose)))
             raise exceptions
         else:
             if self.input_path:
