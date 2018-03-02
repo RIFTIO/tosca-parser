@@ -16,6 +16,9 @@ topology_template:
         software_version: 1.0
         product_name: test_vnf1
         vnfm_info: []
+        flavour_id: simple
+        flavour_description: Test flavour
+        modifiable_attributes: {}
       capabilities:
         # deployment_flavour:
         #   properties:
@@ -42,6 +45,9 @@ topology_template:
         nfvi_constraints: []
         configurable_properties:
           additional_vnfc_configurable_properties: {}
+        vdu_profile:
+          min_number_of_instances: 1
+          max_number_of_instances: 10
       capabilities:
         virtual_compute:
           properties:
@@ -78,16 +84,21 @@ topology_template:
       type: tosca.nodes.nfv.VduCpd
       properties:
         layer_protocol: ipv4
+        trunk_mode: false
       requirements:
         - virtual_binding: VDU1
         - virtual_link: PrivateNetwork
 
     PrivateNetwork:
-      type: tosca.nodes.nfv.VnfVirtualLinkDesc
+      type: tosca.nodes.nfv.VnfVirtualLink
       properties:
         connectivity_type:
           layer_protocol: ipv4
           flow_pattern: mesh
         test_access: []
         description: ..
-        vl_flavours: {}
+        vl_profile:
+          max_bit_rate_requirements:
+            root: 1024
+          min_bit_rate_requirements:
+            root: 512
