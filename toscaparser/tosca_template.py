@@ -36,20 +36,21 @@ import toscaparser.utils.yamlparser
 
 
 # TOSCA template key names
-SECTIONS = (DEFINITION_VERSION, DEFAULT_NAMESPACE, TEMPLATE_NAME,
-            TOPOLOGY_TEMPLATE, TEMPLATE_AUTHOR, TEMPLATE_VERSION,
+SECTIONS = (DEFINITION_VERSION, DEFAULT_NAMESPACE, TOPOLOGY_TEMPLATE,
             DESCRIPTION, IMPORTS, DSL_DEFINITIONS, NODE_TYPES,
             RELATIONSHIP_TYPES, RELATIONSHIP_TEMPLATES,
             CAPABILITY_TYPES, ARTIFACT_TYPES, DATA_TYPES, INTERFACE_TYPES,
             POLICY_TYPES, GROUP_TYPES, REPOSITORIES) = \
-           ('tosca_definitions_version', 'tosca_default_namespace',
-            'template_name', 'topology_template', 'template_author',
-            'template_version', 'description', 'imports', 'dsl_definitions',
+           ('tosca_definitions_version', 'tosca_default_namespace', 'topology_template',
+            'description', 'imports', 'dsl_definitions',
             'node_types', 'relationship_types', 'relationship_templates',
             'capability_types', 'artifact_types', 'data_types',
             'interface_types', 'policy_types', 'group_types', 'repositories')
 # Sections that are specific to individual template definitions
 SPECIAL_SECTIONS = (METADATA) = ('metadata')
+
+METADATA_KNOWN_KEYS = (TEMPLATE_NAME, TEMPLATE_AUTHOR, TEMPLATE_VERSION) = \
+                      ('template_name', 'template_author', 'template_version')
 
 log = logging.getLogger("tosca-parser")
 
@@ -123,6 +124,7 @@ class ToscaTemplate(object):
             self.parsed_params = parsed_params
             self._validate_field()
             self.version = self._tpl_version()
+            self.metadata = self._tpl_metadata()
             self.relationship_types = self._tpl_relationship_types()
             self.description = self._tpl_description()
             self.topology_template = self._topology_template()
@@ -144,6 +146,7 @@ class ToscaTemplate(object):
         if self.tpl:
             s = "Description: {}\n".format(self.description)
             s += "Version: {}\n".format(self.version)
+            s += "Metadata: {}\n".format(self.metadata)
             s += "{}".format(self.topology_template)
             return s
         return ''
@@ -169,6 +172,9 @@ class ToscaTemplate(object):
 
     def _tpl_version(self):
         return self.tpl.get(DEFINITION_VERSION)
+
+    def _tpl_metadata(self):
+        return self.tpl.get(METADATA)
 
     def _tpl_description(self):
         desc = self.tpl.get(DESCRIPTION)

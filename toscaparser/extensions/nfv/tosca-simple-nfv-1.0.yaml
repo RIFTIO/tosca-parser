@@ -2085,7 +2085,7 @@ group_types:
         type: tosca.datatypes.nfv.VnfLcmOperationsConfiguration
         required: false # true in IFA011, but all members are false
     interfaces:
-      Nfv:
+      nfv:
         type: tosca.interfaces.nfv.vnf.lifecycle.Nfv
 
 #
@@ -2467,7 +2467,7 @@ node_types:
           description: >-
             Human readable description of the DF.
           type: string
-          required: true
+          required: false
         configurable_properties:
           description: >-
             Describes the configurable properties of the VNF (e.g. related to auto scaling and auto healing).
@@ -2477,7 +2477,7 @@ node_types:
           description: >-
             Describes the modifiable attributes of the VNF.
           type: tosca.datatypes.nfv.VnfInfoModifiableAttributes
-          required: true # true in IFA011, but all members are false
+          required: false # true in IFA011, but all members are false
       capabilities:
         # PJ NOTE: Commented out as the type is not defined
         # vnf:

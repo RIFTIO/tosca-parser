@@ -133,6 +133,11 @@ class ParserShell(object):
             if description:
                 print("\ndescription: " + description)
 
+        if tosca and tosca.metadata:
+            print("\nmetadata: ")
+            for m in tosca.metadata.keys():
+                print("\t" + m + ': ' + tosca.metadata[m])
+
         if tosca and hasattr(tosca, 'inputs'):
             inputs = tosca.inputs
             if inputs:
