@@ -1441,6 +1441,24 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
             (_('The template version "tosca_xyz" is invalid. Valid versions '
                'are "%s".') % valid_versions))
 
+    def test_import_invalid_template_version(self):
+        tosca_tpl = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data/test_import_invalid_template_version.yaml")
+        self.assertRaises(exception.ValidationError, ToscaTemplate, tosca_tpl)
+        valid_versions = ', '.join(ToscaTemplate.VALID_TEMPLATE_VERSIONS)
+        exception.ExceptionCollector.assertExceptionMessage(
+            exception.InvalidTemplateVersion,
+            (_('The template version "tosca_simple_yaml_XXX in '
+               '{\'invalid\': \'custom_types/invalid_template_version.yaml\'}"'
+               ' is invalid. Valid versions are "%s".') % valid_versions))
+
+    def test_import_template_metadata(self):
+        tosca_tpl = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "data/test_import_metadata.yml")
+        ToscaTemplate(tosca_tpl)
+
     def test_node_template_capabilities_properties(self):
         # validating capability property values
         tpl_snippet = '''
@@ -1608,9 +1626,9 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
                capability: Container
              condition:
                constraint: { greater_than: 50 }
-               period: 60
+               granularity: 60
                evaluations: 1
-               method : average
+               aggregation_method : mean
              action:
                resize: # Operation name
                 inputs:
@@ -1627,13 +1645,14 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
         triggers:
          - high_cpu_usage:
              description: trigger
-             meter_name: cpu_util
+             metric: cpu_util
              condition:
                constraint: utilization greater_than 60%
                threshold: 60
-               period: 600
+               granularity: 600
                evaluations: 1
-               method: average
+               aggregation_method: mean
+               resource_type: instance
                comparison_operator: gt
              metadata: SG1
              action: [SP1]
@@ -1658,9 +1677,10 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
                capability: Container
              condition:
                constraint: utilization greater_than 50%
-               period1: 60
+               granularity1: 60
                evaluations: 1
-               method: average
+               aggregation_method: mean
+               resource_type: instance
              action:
                resize: # Operation name
                 inputs:
@@ -1684,13 +1704,14 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
         triggers:
          - high_cpu_usage:
              description: trigger
-             meter_name: cpu_util
+             metric: cpu_util
              condition:
                constraint: utilization greater_than 60%
                threshold: 60
-               period: 600
+               granularity: 600
                evaluations: 1
-               method: average
+               aggregation_method: mean
+               resource_type: instance
                comparison_operator: gt
              metadata1: SG1
              action: [SP1]
