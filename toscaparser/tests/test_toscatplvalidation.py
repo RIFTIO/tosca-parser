@@ -1446,7 +1446,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
             os.path.dirname(os.path.abspath(__file__)),
             "data/test_import_invalid_template_version.yaml")
         self.assertRaises(exception.ValidationError, ToscaTemplate, tosca_tpl)
-        valid_versions = ', '.join(ToscaTemplate.VALID_TEMPLATE_VERSIONS)
+        valid_versions = ', '.join(sorted(ToscaTemplate.VALID_TEMPLATE_VERSIONS))
         exception.ExceptionCollector.assertExceptionMessage(
             exception.InvalidTemplateVersion,
             (_('The template version "tosca_simple_yaml_XXX in '

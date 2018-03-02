@@ -155,6 +155,7 @@ class TopologyTemplate(object):
         groups = []
         member_nodes = None
         for group_name, group_tpl in self._tpl_groups().items():
+            log.debug("Group: {}".format(group_name))
             member_names = group_tpl.get('members')
             if member_names is not None:
                 DataEntity.validate_datatype('list', member_names)
