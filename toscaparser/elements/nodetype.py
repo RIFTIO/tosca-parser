@@ -88,7 +88,6 @@ class NodeType(StatefulEntityType):
                             # we need to lookup the node type using
                             # the capability type
                             value = req
-                            log.debug("Req: {}".format(req))
                             if isinstance(value, dict):
                                 captype = value['capability']
                                 value = (self._get_node_type_by_cap(captype))
@@ -122,7 +121,6 @@ class NodeType(StatefulEntityType):
             else:
                 node_def = self.custom_def[node_type]
             if isinstance(node_def, dict) and 'capabilities' in node_def and node_def['capabilities']:
-                log.debug("Node def: {}".format(node_def))
                 node_caps = node_def['capabilities']
                 for value in node_caps.values():
                     if isinstance(value, dict) and \

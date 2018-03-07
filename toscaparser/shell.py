@@ -138,6 +138,9 @@ class ParserShell(object):
             for m in tosca.metadata.keys():
                 print("\t" + m + ': ' + tosca.metadata[m])
 
+        if tosca and hasattr(tosca, 'substitution_mappings'):
+            print("\nsubstitution_mapping: "+ tosca.substitution_mappings.type)
+
         if tosca and hasattr(tosca, 'inputs'):
             inputs = tosca.inputs
             if inputs:
