@@ -19,22 +19,6 @@ topology_template:
         flavour_id: simple
         flavour_description: Test flavour
         modifiable_attributes: {}
-      capabilities:
-        # deployment_flavour:
-        #   properties:
-        #     flavour_id: test_flv
-        #     description: ...
-        #     vdu_profile:
-        #       VDU1:
-        #         min_number_of_instances: 1
-        #         max_number_of_instances: 10
-        #     instantiation_level:
-        #       min:
-        #         description: ...
-        #         vdu_levels:
-        #           VDU1:
-        #             number_of_instances: 1
-        #     default_instantiation_level_id: min
 
     VDU1:
       type: tosca.nodes.nfv.VDU.Compute
@@ -64,7 +48,8 @@ topology_template:
     Storage1:
       type: tosca.nodes.nfv.VDU.VirtualStorage
       properties:
-        type_of_storage: ..
+        id: vdu1-storage
+        type_of_storage: volume
         size_of_storage: 10 GB
         rdma_enabled:  false
       artifacts:
@@ -81,9 +66,22 @@ topology_template:
           supported_virtualisation_environments:
             - KVM
     CP1:
-      type: tosca.nodes.nfv.VduCpd
+      type: tosca.nodes.nfv.VduCp
       properties:
         layer_protocol: ipv4
+        protocol_data:
+          - asscociated_layer_protocol: ipv4
+            address_data:
+              address_type: ip_address
+              l3_address_data:
+                ip_address_assignment: true
+                floating_ip_activated: false
+          - asscociated_layer_protocol: ipv6
+            address_data:
+              address_type: ip_address
+              l3_address_data:
+                ip_address_assignment: true
+                floating_ip_activated: false
         trunk_mode: false
       requirements:
         - virtual_binding: VDU1

@@ -111,18 +111,6 @@ node_types:
       - forwarder:
           capability: tosca.capabilities.nfv.Forwarder
 
-  tosca.nodes.nfv.FP:
-    derived_from: tosca.nodes.Root
-    properties:
-      policy:
-        type: string
-        required: false
-      description:
-        type: string
-    requirements:
-      - forwarder:
-          capability: tosca.capabilities.nfv.Forwarder
-
 ##########################################################################
 # Relationship Type.
 # A Relationship Type is a reusable entity that defines the type of one
