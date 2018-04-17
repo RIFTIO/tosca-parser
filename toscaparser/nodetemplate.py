@@ -83,8 +83,12 @@ class NodeTemplate(EntityTemplate):
                     'Requirement node "%(node)s" for "%(name)s"'
                     ' can not be full-filled.') \
                 % {'node': node, 'name': self.name}
-            if (node in list(self.type_definition.TOSCA_DEF.keys())
-               or node in self.custom_def):
+            log.debug("Node {}: Custom type def {}".format(node, self.custom_def))
+            if isinstance(node, list):
+                # TODO (Philip): Suppport HP TOSCA defnition
+                return
+
+            if (node in self.type_definition.TOSCA_DEF) or (node in self.custom_def):
                 ExceptionCollector.appendException(NotImplementedError(msg))
                 return
 

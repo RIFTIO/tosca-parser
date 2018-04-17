@@ -15,13 +15,14 @@ topology_template:
         provider: acmetelco
         software_version: 1.0
         product_name: test_vnf1
+        product_info_name: test VNF1
         vnfm_info: []
         flavour_id: simple
         flavour_description: Test flavour
         modifiable_attributes: {}
 
     VDU1:
-      type: tosca.nodes.nfv.VDU.Compute
+      type: tosca.nodes.nfv.Vdu.Compute
       properties:
         name: test_vnf1
         description: ...
@@ -46,7 +47,7 @@ topology_template:
 
 
     Storage1:
-      type: tosca.nodes.nfv.VDU.VirtualStorage
+      type: tosca.nodes.nfv.Vdu.VirtualStorage
       properties:
         id: vdu1-storage
         type_of_storage: volume
