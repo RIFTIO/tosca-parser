@@ -69,7 +69,7 @@ topology_template:
     CP1:
       type: tosca.nodes.nfv.VduCp
       properties:
-        layer_protocol: ipv4
+        layer_protocol: [ipv4, ipv6]
         protocol_data:
           - asscociated_layer_protocol: ipv4
             address_data:
