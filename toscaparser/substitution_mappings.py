@@ -168,8 +168,7 @@ class SubstitutionMappings(object):
 
         all_inputs = set([input.name for input in self.inputs])
         required_properties = set([p.name for p in
-                                   self.node_definition.
-                                   get_properties_def_objects()
+                                   self.node_definition.get_properties_def_objects()
                                    if p.required and p.default is None])
         # Must provide inputs for required properties of node type.
         for property in required_properties:
@@ -184,10 +183,11 @@ class SubstitutionMappings(object):
         # If the optional properties of node type need to be customized by
         # substituted node, it also is necessary to define inputs for them,
         # otherwise they are not mandatory to be defined.
-        customized_parameters = set(self.sub_mapped_node_template
-                                    .get_properties().keys()
+        customized_parameters = set(self.sub_mapped_node_template.get_properties().keys()
                                     if self.sub_mapped_node_template else [])
-        all_properties = set(self.node_definition.get_properties_def())
+        all_properties = set([p.name for p in
+                              self.node_definition.get_properties_def_objects()
+                              if not p.required])
         for parameter in customized_parameters - all_inputs:
             if parameter in all_properties:
                 ExceptionCollector.appendException(
