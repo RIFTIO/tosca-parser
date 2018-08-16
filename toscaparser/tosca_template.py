@@ -25,6 +25,7 @@ from toscaparser.common.exception import MissingRequiredParameterError
 from toscaparser.common.exception import UnknownFieldError
 from toscaparser.common.exception import ValidationError
 from toscaparser.elements.entity_type import update_definitions
+from toscaparser.elements.tosca_type_validation import TypeValidation
 from toscaparser.extensions.exttools import ExtTools
 import toscaparser.imports
 from toscaparser.prereq.csar import CSAR
@@ -58,16 +59,10 @@ YAML_LOADER = toscaparser.utils.yamlparser.load_yaml
 
 
 class ToscaTemplate(object):
+
+    ADDITIONAL_SECTIONS = {k: SPECIAL_SECTIONS for k in TypeValidation.STANDARD_TEMPLATE_VERSIONS}
+
     exttools = ExtTools()
-
-    VALID_TEMPLATE_VERSIONS = ['tosca_simple_yaml_1_0',
-                               'tosca_simple_yaml_1_1']
-
-    VALID_TEMPLATE_VERSIONS.extend(exttools.get_versions())
-
-    ADDITIONAL_SECTIONS = {'tosca_simple_yaml_1_0': SPECIAL_SECTIONS,
-                           'tosca_simple_yaml_1_1': SPECIAL_SECTIONS}
-
     ADDITIONAL_SECTIONS.update(exttools.get_sections())
 
     '''Load the template data.'''
@@ -326,15 +321,14 @@ class ToscaTemplate(object):
                     UnknownFieldError(what='Template', field=name))
 
     def _validate_version(self, version):
-        if version not in self.VALID_TEMPLATE_VERSIONS:
+        if version not in TypeValidation.VALID_TEMPLATE_VERSIONS:
             ExceptionCollector.appendException(
                 InvalidTemplateVersion(
                     what=version,
-                    valid_versions=', '. join(sorted(self.VALID_TEMPLATE_VERSIONS))))
+                    valid_versions=', '. join(sorted(TypeValidation.VALID_TEMPLATE_VERSIONS))))
         else:
-            if (version != 'tosca_simple_yaml_1_0' and
-                    version != 'tosca_simple_yaml_1_1'):
-                update_definitions(version)
+            if version not in TypeValidation.STANDARD_TEMPLATE_VERSIONS:
+                 update_definitions(version)
 
     def _get_path(self, path):
         if path.lower().endswith('.yaml') or path.lower().endswith('.yml'):
