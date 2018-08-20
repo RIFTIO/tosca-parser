@@ -8,7 +8,7 @@ metadata:
 topology_template:
   node_templates:
     VNF1:
-      type: tosca.nodes.nfv.VNF
+      type: tosca.nodes.nfv.Vnf
       properties:
         descriptor_id: vnf1
         descriptor_version: 1.0
@@ -50,22 +50,26 @@ topology_template:
       type: tosca.nodes.nfv.Vdu.VirtualStorage
       properties:
         id: vdu1-storage
-        type_of_storage: volume
-        size_of_storage: 10 GB
-        rdma_enabled:  false
-      artifacts:
-        sw_image:
-          name: Test image
-          version: 1.0
+        virtual_storage_data:
+          type_of_storage: volume
+          size_of_storage: 10 GB
+        sw_image_data:
+          name: Software for Testing
+          version: '1.0'
           checksum: 9af30fce37a4c5c831e095745744d6d2
-          container_format: qcow2
-          disk_format: bare
+          disk_format: QCOW2
+          container_format: BARE
           min_disk: 2 GB
           min_ram: 8096 MB
           size: 2 GB
-          sw_image: test.image.v1.0.qcow2
+          operating_system: Linux
           supported_virtualisation_environments:
             - KVM
+      artifacts:
+        sw_image:
+          type: tosca.artifacts.nfv.SwImage
+          file: test.image.v1.0.qcow2
+
     CP1:
       type: tosca.nodes.nfv.VduCp
       properties:

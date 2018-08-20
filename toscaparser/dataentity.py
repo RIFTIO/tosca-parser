@@ -45,7 +45,7 @@ class DataEntity(object):
         # A datatype can not have both 'type' and 'properties' definitions.
         # If the datatype has 'type' definition
         log.debug("{}: Data type validate: {}, {}".
-                  format(self.property_name,
+                  format(self.datatype.type,
                          self.datatype.value_type,
                          self.value))
         if self.datatype.value_type:
@@ -110,6 +110,7 @@ class DataEntity(object):
                 schema_name = self._find_schema(name)
                 if not schema_name:
                     continue
+                log.debug("Name: {}, Schema: {}".format(name, schema_name))
                 prop_schema = Schema(name, schema_name)
                 # check if field value meets type defined
                 DataEntity.validate_datatype(prop_schema.type, value,

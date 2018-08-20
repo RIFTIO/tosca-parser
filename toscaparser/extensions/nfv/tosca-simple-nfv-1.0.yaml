@@ -2354,11 +2354,11 @@ node_types:
   #       type: tosca.interfaces.nfv.ns.lifecycle.Nfv
 
 
-  tosca.nodes.nfv.VNF:
+  tosca.nodes.nfv.Vnf:
       _extensions:
         normative: true
-        shorthand_name: VNF
-        type_qualified_name: toscanfv:VNF
+        shorthand_name: Vnf
+        type_qualified_name: toscanfv:Vnf
         specification: ETSI NFV SOL 001 v0.6.0
         specification_section: 6.8.1
         specification_url: ''

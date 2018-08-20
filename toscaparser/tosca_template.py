@@ -60,6 +60,8 @@ YAML_LOADER = toscaparser.utils.yamlparser.load_yaml
 
 class ToscaTemplate(object):
 
+    VALID_TEMPLATE_VERSIONS = TypeValidation.VALID_TEMPLATE_VERSIONS
+
     ADDITIONAL_SECTIONS = {k: SPECIAL_SECTIONS for k in TypeValidation.STANDARD_TEMPLATE_VERSIONS}
 
     exttools = ExtTools()
@@ -321,14 +323,14 @@ class ToscaTemplate(object):
                     UnknownFieldError(what='Template', field=name))
 
     def _validate_version(self, version):
-        if version not in TypeValidation.VALID_TEMPLATE_VERSIONS:
+        if version not in self.VALID_TEMPLATE_VERSIONS:
             ExceptionCollector.appendException(
                 InvalidTemplateVersion(
                     what=version,
-                    valid_versions=', '. join(sorted(TypeValidation.VALID_TEMPLATE_VERSIONS))))
+                    valid_versions=', '. join(sorted(self.VALID_TEMPLATE_VERSIONS))))
         else:
             if version not in TypeValidation.STANDARD_TEMPLATE_VERSIONS:
-                 update_definitions(version)
+                update_definitions(version)
 
     def _get_path(self, path):
         if path.lower().endswith('.yaml') or path.lower().endswith('.yml'):

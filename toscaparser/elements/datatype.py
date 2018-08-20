@@ -46,9 +46,16 @@ class DataType(StatefulEntityType):
     def get_all_properties_objects(self):
         '''Return all properties objects defined in type and parent type.'''
         props_def = self.get_properties_def_objects()
+        # Get the property names
+        prop_names = [p.name for p in props_def]
         ptype = self.parent_type
         while ptype:
-            props_def.extend(ptype.get_properties_def_objects())
+            props = ptype.get_properties_def_objects()
+            if props:
+                for p in props:
+                    if p.name not in prop_names:
+                        props_def.append(p)
+                        prop_names.append(p.name)
             ptype = ptype.parent_type
         return props_def
 

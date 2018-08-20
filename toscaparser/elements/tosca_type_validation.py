@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import InvalidTemplateVersion
 from toscaparser.common.exception import UnknownFieldError
@@ -35,7 +37,7 @@ class TypeValidation(object):
                                   'tosca_simple_yaml_1_1',
                                   'tosca_simple_yaml_1_2']
 
-    VALID_TEMPLATE_VERSIONS = STANDARD_TEMPLATE_VERSIONS
+    VALID_TEMPLATE_VERSIONS = copy.deepcopy(STANDARD_TEMPLATE_VERSIONS)
 
     exttools = ExtTools()
     VALID_TEMPLATE_VERSIONS.extend(exttools.get_versions())
