@@ -18,6 +18,7 @@ from toscaparser.common.exception import MissingDefaultValueError
 from toscaparser.common.exception import MissingRequiredFieldError
 from toscaparser.common.exception import MissingRequiredInputError
 from toscaparser.common.exception import MissingRequiredOutputError
+from toscaparser.common.exception import TOSCAException
 from toscaparser.common.exception import UnknownFieldError
 from toscaparser.common.exception import UnknownOutputError
 from toscaparser.elements.nodetype import NodeType
@@ -42,6 +43,7 @@ class SubstitutionMappings(object):
                  sub_mapped_node_template, custom_defs):
         self.nodetemplates = nodetemplates
         self.sub_mapping_def = sub_mapping_def
+        TOSCAException.set_context(self.type, "substitution_mapping")
         self.inputs = inputs or []
         self.outputs = outputs or []
         self.sub_mapped_node_template = sub_mapped_node_template
@@ -52,6 +54,7 @@ class SubstitutionMappings(object):
         # self._properties = None
         self._capabilities = None
         self._requirements = None
+        TOSCAException.reset_context()
 
     @property
     def type(self):

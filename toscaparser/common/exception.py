@@ -32,12 +32,22 @@ class TOSCAException(Exception):
     '''
 
     _FATAL_EXCEPTION_FORMAT_ERRORS = False
+    _type = None
+    _node = None
 
     message = _('An unknown exception occurred.')
 
     def __init__(self, **kwargs):
         try:
-            self.message = self.msg_fmt % kwargs
+            msg_prefix = ''
+            if TOSCAException._node:
+                msg_prefix = "{}".format(TOSCAException._node)
+                if TOSCAException._type:
+                    msg_prefix = msg_prefix + '({})'.format(TOSCAException._type)
+                msg_prefix = msg_prefix + ': '
+
+            self.message = msg_prefix + self.msg_fmt % kwargs
+
         except KeyError:
             exc_info = sys.exc_info()
             log.exception(_('Exception in string format operation: %s')
@@ -65,6 +75,15 @@ class TOSCAException(Exception):
     def set_fatal_format_exception(flag):
         if isinstance(flag, bool):
             TOSCAException._FATAL_EXCEPTION_FORMAT_ERRORS = flag
+
+    @staticmethod
+    def set_context(type_, node):
+        TOSCAException._type = type_
+        TOSCAException._node = node
+
+    @staticmethod
+    def reset_context():
+        TOSCAException.set_context(None, None)
 
 
 class UnsupportedTypeError(TOSCAException):
@@ -249,5 +268,8 @@ class ExceptionCollector(object):
     def assertExceptionMessage(exception, message):
         err_msg = exception.__name__ + ': ' + message
         report = ExceptionCollector.getExceptionsReport(False)
-        assert err_msg in report, (_('Could not find "%(msg)s" in "%(rep)s".')
+        for ex in report:
+            if ex.startswith(exception.__name__) and message in ex:
+                return
+        assert False, (_('Could not find "%(msg)s" in "%(rep)s".')
                                    % {'rep': report.__str__(), 'msg': err_msg})

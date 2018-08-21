@@ -77,7 +77,6 @@ class ToscaTemplate(object):
             '%(filename)s:%(lineno)d) - %(message)s')
         stderr_handler = logging.StreamHandler(stream=sys.stderr)
         stderr_handler.setFormatter(fmt)
-        log = logging.getLogger("tosca-parser")
         if debug:
             log.setLevel(logging.DEBUG)
         else:
@@ -131,8 +130,8 @@ class ToscaTemplate(object):
                 self.relationship_templates = self._relationship_templates()
                 self.nodetemplates = self._nodetemplates()
                 self.outputs = self._outputs()
-                self.policies = self._policies()
                 self.groups = self._groups()
+                self.policies = self._policies()
                 self.substitution_mappings = self._substitution_mappings()
                 self._handle_nested_tosca_templates_with_topology()
                 self.graph = ToscaGraph(self.nodetemplates)

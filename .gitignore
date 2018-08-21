@@ -20,7 +20,7 @@ develop-eggs
 lib
 lib64
 cover
-tosca-parser-*.tar.gz
+rw-tosca-parser-*.tar.gz
 
 # Installer logs
 pip-log.txt

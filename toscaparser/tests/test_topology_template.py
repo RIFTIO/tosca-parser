@@ -193,7 +193,7 @@ class TopologyTemplateTest(TestCase):
         sub_mappings = (toscaparser.utils.yamlparser.
                         simple_parse(tpl_snippet))['substitution_mappings']
         expected_message = _(
-            'SubstitutionMappings contains unknown field '
+            'substitution_mapping(example.DatabaseSubsystem): SubstitutionMappings contains unknown field '
             '"invalid_key". Refer to the definition '
             'to verify valid values.')
         err = self.assertRaises(
@@ -212,7 +212,7 @@ class TopologyTemplateTest(TestCase):
         '''
         sub_mappings = (toscaparser.utils.yamlparser.
                         simple_parse(tpl_snippet))['substitution_mappings']
-        expected_message = _('SubstitutionMappings used in topology_template '
+        expected_message = _('substitution_mapping: SubstitutionMappings used in topology_template '
                              'is missing required field "node_type".')
         err = self.assertRaises(
             exception.MissingRequiredFieldError,
@@ -232,7 +232,7 @@ class TopologyTemplateTest(TestCase):
         sub_mappings = (toscaparser.utils.yamlparser.
                         simple_parse(tpl_snippet))['substitution_mappings']
         custom_defs = self._get_custom_types()
-        expected_message = _('Node type "example.DatabaseSubsystem1" '
+        expected_message = _('substitution_mapping(example.DatabaseSubsystem1): Node type "example.DatabaseSubsystem1" '
                              'is not a valid type.')
         err = self.assertRaises(
             exception.InvalidNodeTypeError,

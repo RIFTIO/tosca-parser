@@ -84,6 +84,10 @@ class DataTypeTest(TestCase):
     '''
     custom_type_def = yamlparser.simple_parse(custom_type_schema)
 
+    def setUp(self):
+        TestCase.setUp(self)
+        exception.ExceptionCollector.stop()
+
     def test_empty_template(self):
         value_snippet = ''
         value = yamlparser.simple_parse(value_snippet)
@@ -196,7 +200,7 @@ class DataTypeTest(TestCase):
         self.assertIsNone(input.validate(3360))
         err = self.assertRaises(exception.ValidationError, input.validate,
                                 336000)
-        self.assertEqual(_('The value "336000" of property "None" is out of '
+        self.assertEqual(_('db_port(input): The value "336000" of property "None" is out of '
                            'range "(min:1, max:65535)".'),
                          err.__str__())
 

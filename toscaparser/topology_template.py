@@ -67,6 +67,7 @@ class TopologyTemplate(object):
         inputs = []
         for name, attrs in self._tpl_inputs().items():
             log.debug("Input {}: {}".format(name, attrs))
+            exception.TOSCAException.set_context("input", name)
             input = Input(name, attrs, self.custom_defs)
             if self.parsed_params and name in self.parsed_params:
                 input.validate(self.parsed_params[name])
@@ -87,6 +88,7 @@ class TopologyTemplate(object):
                         input_name=input.name))
 
             inputs.append(input)
+        exception.TOSCAException.reset_context()
         return inputs
 
     def _nodetemplates(self):
@@ -109,16 +111,20 @@ class TopologyTemplate(object):
         rel_templates = []
         tpls = self._tpl_relationship_templates()
         for name in tpls:
+            exception.TOSCAException.set_context("relationships", name)
             tpl = RelationshipTemplate(tpls[name], name, self.custom_defs)
             rel_templates.append(tpl)
+        exception.TOSCAException.reset_context()
         return rel_templates
 
     def _outputs(self):
         outputs = []
         for name, attrs in self._tpl_outputs().items():
+            exception.TOSCAException.set_context("output", name)
             output = Output(name, attrs)
             output.validate()
             outputs.append(output)
+        exception.TOSCAException.reset_context()
         return outputs
 
     def _substitution_mappings(self):
@@ -137,6 +143,7 @@ class TopologyTemplate(object):
         for policy in self._tpl_policies():
             log.debug("Policy: {}".format(policy))
             for policy_name, policy_tpl in policy.items():
+                exception.TOSCAException.set_context("policy", policy_name)
                 target_list = policy_tpl.get('targets')
                 target_objects = []
                 targets_type = "groups"
@@ -149,12 +156,14 @@ class TopologyTemplate(object):
                                    target_objects, targets_type,
                                    self.custom_defs)
                 policies.append(policyObj)
+        exception.TOSCAException.reset_context()
         return policies
 
     def _groups(self):
         groups = []
         member_nodes = None
         for group_name, group_tpl in self._tpl_groups().items():
+            exception.TOSCAException.set_context("group", group_name)
             log.debug("Group: {}".format(group_name))
             member_names = group_tpl.get('members')
             if member_names is not None:
@@ -171,6 +180,7 @@ class TopologyTemplate(object):
                           member_nodes,
                           self.custom_defs)
             groups.append(group)
+        exception.TOSCAException.reset_context()
         return groups
 
     def _get_group_members(self, member_names):

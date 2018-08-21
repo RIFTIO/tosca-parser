@@ -241,7 +241,7 @@ class ToscaTemplateValidationTest(TestCase):
         tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
         err = self.assertRaises(exception.UnsupportedTypeError,
                                 TopologyTemplate, tpl, None)
-        expectedmessage = _('Type "tosca.test.invalidtype" is valid'
+        expectedmessage = _('invalid_type(node_type): Type "tosca.test.invalidtype" is valid'
                             ' TOSCA type but not supported at this time.')
         self.assertEqual(expectedmessage, err.__str__())
 
@@ -501,7 +501,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
         except Exception as err:
             self.assertTrue(
                 isinstance(err, exception.MissingRequiredFieldError))
-            self.assertEqual(_('Output "server_address" is missing required '
+            self.assertEqual(_('server_address(output): Output "server_address" is missing required '
                                'field "value".'), err.__str__())
 
         tpl_snippet = '''
@@ -518,7 +518,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
             output.validate()
         except Exception as err:
             self.assertIsInstance(err, exception.UnknownFieldError)
-            self.assertEqual(_('Output "server_address" contains unknown '
+            self.assertEqual(_('server_address(output): Output "server_address" contains unknown '
                                'field "descriptions". Refer to the definition '
                                'to verify valid values.'),
                              err.__str__())
@@ -578,7 +578,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
         tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
         err = self.assertRaises(exception.MissingRequiredFieldError,
                                 self._repo_content, tpl)
-        expectedmessage = _('Repository "repo_code1" is missing '
+        expectedmessage = _('storage_attachto(properties): Repository "repo_code1" is missing '
                             'required field "url".')
         self.assertEqual(expectedmessage, err.__str__())
 
@@ -602,7 +602,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
         tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
         err = self.assertRaises(exception.UnknownFieldError,
                                 self._repo_content, tpl)
-        expectedmessage = _('repositories "repo_code2" contains unknown field'
+        expectedmessage = _('storage_attachto(properties): repositories "repo_code2" contains unknown field'
                             ' "descripton". Refer to the definition to verify'
                             ' valid values.')
         self.assertEqual(expectedmessage, err.__str__())
@@ -627,7 +627,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
         tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
         err = self.assertRaises(exception.URLException,
                                 self._repo_content, tpl)
-        expectedmessage = _('repsositories "repo_code1" Invalid Url')
+        expectedmessage = _('storage_attachto(properties): repsositories "repo_code1" Invalid Url')
         self.assertEqual(expectedmessage, err.__str__())
 
     def test_groups(self):
@@ -675,7 +675,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
         tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
         err = self.assertRaises(exception.MissingRequiredFieldError,
                                 TopologyTemplate, tpl, None)
-        expectedmessage = _('Template "webserver_group" is missing '
+        expectedmessage = _('webserver_group(group_type): Template "webserver_group" is missing '
                             'required field "type".')
         self.assertEqual(expectedmessage, err.__str__())
 
@@ -700,7 +700,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
             members: [ serv, mysql_dbms ]
         '''
         tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
-        expectedmessage = _('"Target member "serv" is not found in '
+        expectedmessage = _('webserver_group(group): "Target member "serv" is not found in '
                             'node_templates"')
         err = self.assertRaises(exception.InvalidGroupTargetException,
                                 TopologyTemplate, tpl, None)
@@ -727,7 +727,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
             members: [ server, server, mysql_dbms ]
         '''
         tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
-        expectedmessage = _('"Member nodes '
+        expectedmessage = _('webserver_group(group): "Member nodes '
                             '"[\'server\', \'server\', \'mysql_dbms\']" '
                             'should be >= 1 and not repeated"')
         err = self.assertRaises(exception.InvalidGroupTargetException,
@@ -755,7 +755,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
             members: []
         '''
         tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
-        expectedmessage = _('"Member nodes "[]" should be >= 1 '
+        expectedmessage = _('webserver_group(group): "Member nodes "[]" should be >= 1 '
                             'and not repeated"')
         err = self.assertRaises(exception.InvalidGroupTargetException,
                                 TopologyTemplate, tpl, None)
@@ -802,7 +802,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
                   distribution: Fedora
                   version: 18.0
         '''
-        expectedmessage = _('Template "server" is missing required field '
+        expectedmessage = _('server(node_type): Template "server" is missing required field '
                             '"type".')
         err = self.assertRaises(
             exception.MissingRequiredFieldError,
@@ -982,7 +982,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
               Standard:
                  configure: mysql_database_configure.sh
         '''
-        expectedmessage = _('Type "tosca.nodes.Databases" is not '
+        expectedmessage = _('mysql_database(node_type): Type "tosca.nodes.Databases" is not '
                             'a valid type.')
         err = self.assertRaises(
             exception.InvalidTypeError,
@@ -1291,7 +1291,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
               Standard:
                  configure: mysql_database_configure.sh
         '''
-        expectedmessage = _('"capabilities" of template "mysql_database" '
+        expectedmessage = _('mysql_database(capabilities): "capabilities" of template "mysql_database" '
                             'contains unknown field "http_endpoint". Refer to '
                             'the definition to verify valid values.')
         err = self.assertRaises(
@@ -1319,7 +1319,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
                   distribution: Fedora
                   version: 18.0
         '''
-        expectedmessage = _('"properties" of template "server" contains '
+        expectedmessage = _('server(properties): "properties" of template "server" contains '
                             'unknown field "os_image". Refer to the '
                             'definition to verify valid values.')
         err = self.assertRaises(
@@ -1404,7 +1404,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
                      wp_db_port: { get_ref_property: [ database_endpoint, \
                      database_endpoint, port ] }
         '''
-        expectedmessage = _('"interfaces" of template "wordpress" contains '
+        expectedmessage = _('wordpress(relationship): "interfaces" of template "wordpress" contains '
                             'unknown field "input". Refer to the definition '
                             'to verify valid values.')
         err = self.assertRaises(
@@ -1420,7 +1420,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
                 properties:
                   device: test_device
         '''
-        expectedmessage = _('"properties" of template "storage_attachto" is '
+        expectedmessage = _('storage_attachto(properties): "properties" of template "storage_attachto" is '
                             'missing required field "[\'location\']".')
         rel_template = (toscaparser.utils.yamlparser.
                         simple_parse(tpl_snippet))['relationship_templates']
@@ -1470,7 +1470,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
                 properties:
                   initiator: test
         '''
-        expectedmessage = _('The value "test" of property "initiator" is '
+        expectedmessage = _('server(capabilities): The value "test" of property "initiator" is '
                             'not valid. Expected a value from "[source, '
                             'target, peer]".')
 
@@ -1501,7 +1501,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
                   max_instances: 3
                   default_instances: 5
         '''
-        expectedmessage = _('"properties" of template "server": '
+        expectedmessage = _('server(capabilities): "properties" of template "server": '
                             '"default_instances" value is not between '
                             '"min_instances" and "max_instances".')
         err = self.assertRaises(
@@ -1517,7 +1517,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
             properties:
               maxsize: 1 GB
         '''
-        expectedmessage = _('"properties" of template "server" is missing '
+        expectedmessage = _('server(properties): "properties" of template "server" is missing '
                             'required field "[\'name\']".')
         err = self.assertRaises(
             exception.MissingRequiredFieldError,
@@ -1691,7 +1691,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
                     simple_parse(tpl_snippet))['triggers'][0]
         name = list(triggers.keys())[0]
         expectedmessage = _(
-            'Triggers "resize_compute" contains unknown field '
+            'servers_placement(policy_type): Triggers "resize_compute" contains unknown field '
             '"target_filter1". Refer to the definition '
             'to verify valid values.')
         err = self.assertRaises(
@@ -1720,7 +1720,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
                     simple_parse(tpl_snippet))['triggers'][0]
         name = list(triggers.keys())[0]
         expectedmessage = _(
-            'Triggers "high_cpu_usage" contains unknown field '
+            'servers_placement(policy_type): Triggers "high_cpu_usage" contains unknown field '
             '"metadata1". Refer to the definition '
             'to verify valid values.')
         err = self.assertRaises(
@@ -1738,7 +1738,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
                     simple_parse(tpl_snippet))['policies'][0]
         name = list(policies.keys())[0]
 
-        expectedmessage = _('Template "servers_placement" is missing '
+        expectedmessage = _('servers_placement(policy_type): Template "servers_placement" is missing '
                             'required field "type".')
         err = self.assertRaises(
             exception.MissingRequiredFieldError,
@@ -1772,7 +1772,7 @@ heat-translator/master/translator/tests/data/custom_types/wordpress.yaml
         tpl = (toscaparser.utils.yamlparser.simple_parse(tpl_snippet))
         err = self.assertRaises(exception.UnknownFieldError,
                                 TopologyTemplate, tpl, None)
-        expectedmessage = _('"capabilities" of template "server" contains '
+        expectedmessage = _('server(capabilities): "capabilities" of template "server" contains '
                             'unknown field "oss". Refer to the definition '
                             'to verify valid values.')
         self.assertEqual(expectedmessage, err.__str__())

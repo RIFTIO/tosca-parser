@@ -23,6 +23,10 @@ from toscaparser.utils import yamlparser
 
 class ConstraintTest(TestCase):
 
+    def setUp(self):
+        TestCase.setUp(self)
+        exception.ExceptionCollector.stop()
+
     def test_schema_dict(self):
         tpl_snippet = '''
         cpus:

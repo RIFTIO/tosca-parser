@@ -15,6 +15,7 @@ import logging
 
 from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import MissingRequiredFieldError
+from toscaparser.common.exception import TOSCAException
 from toscaparser.common.exception import UnknownFieldError
 from toscaparser.dataentity import DataEntity
 from toscaparser.elements.constraints import Schema
@@ -66,7 +67,9 @@ class Input(object):
 
     def validate(self, value=None):
         if value is not None:
+            TOSCAException.set_context("input", self.name)
             self._validate_value(value)
+            TOSCAException.reset_context()
 
     def _validate_field(self):
         for name in self.schema.schema:
@@ -78,12 +81,14 @@ class Input(object):
                                       field=name))
 
     def validate_type(self, input_type):
+        TOSCAException.set_context("input", self.name)
         if input_type not in Schema.PROPERTY_TYPES and \
             input_type not in self.custom_defs:
             log.error("Invalid type {}: {}, schema: {}".
                       format(self.name, input_type, Schema.PROPERTY_TYPES))
             ExceptionCollector.appendException(
                 ValueError(_('Invalid type "%s".') % input_type))
+        TOSCAException.reset_context()
 
     # TODO(anyone) Need to test for any built-in datatype not just network
     # that is, tosca.datatypes.* and not assume tosca.datatypes.network.*
@@ -120,7 +125,9 @@ class Output(object):
         return self.attrs.get(self.VALUE)
 
     def validate(self):
+        TOSCAException.set_context("output", self.name)
         self._validate_field()
+        TOSCAException.reset_context()
 
     def _validate_field(self):
         if not isinstance(self.attrs, dict):

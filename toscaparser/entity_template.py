@@ -16,6 +16,7 @@ from toscaparser.artifacts import Artifact
 from toscaparser.capabilities import Capability
 from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import MissingRequiredFieldError
+from toscaparser.common.exception import TOSCAException
 from toscaparser.common.exception import UnknownFieldError
 from toscaparser.common.exception import ValidationError
 from toscaparser.elements.grouptype import GroupType
@@ -46,42 +47,44 @@ class EntityTemplate(object):
     SPECIAL_SECTIONS = (METADATA) = ('metadata')
 
     def __init__(self, name, template, entity_name, custom_def=None):
+        TOSCAException.set_context(entity_name, name)
         self.name = name
         self.entity_tpl = template
         self.custom_def = custom_def
         self._validate_field(self.entity_tpl)
-        type = self.entity_tpl.get('type')
-        UnsupportedType.validate_type(type)
+        type_ = self.entity_tpl.get('type')
+        UnsupportedType.validate_type(type_)
         if entity_name == 'node_type':
-            self.type_definition = NodeType(type, custom_def) \
-                if type is not None else None
+            self.type_definition = NodeType(type_, custom_def) \
+                if type_ is not None else None
         if entity_name == 'relationship_type':
             relationship = template.get('relationship')
-            type = None
+            type_ = None
             if relationship and isinstance(relationship, dict):
-                type = relationship.get('type')
+                type_ = relationship.get('type')
             elif isinstance(relationship, str):
-                type = self.entity_tpl['relationship']
+                type_ = self.entity_tpl['relationship']
             else:
-                type = self.entity_tpl['type']
-            UnsupportedType.validate_type(type)
-            self.type_definition = RelationshipType(type,
+                type_ = self.entity_tpl['type']
+            UnsupportedType.validate_type(type_)
+            self.type_definition = RelationshipType(type_,
                                                     None, custom_def)
         if entity_name == 'policy_type':
-            if not type:
+            if not type_:
                 msg = (_('Policy definition of "%(pname)s" must have'
                        ' a "type" attribute.') % dict(pname=name))
                 ExceptionCollector.appendException(
                     ValidationError(msg))
-            self.type_definition = PolicyType(type, custom_def)
+            self.type_definition = PolicyType(type_, custom_def)
         if entity_name == 'group_type':
-            self.type_definition = GroupType(type, custom_def) \
-                if type is not None else None
+            self.type_definition = GroupType(type_, custom_def) \
+                if type_ is not None else None
         self._properties = None
         self._interfaces = None
         self._requirements = None
         self._capabilities = None
         self._artifacts = None
+        TOSCAException.reset_context()
 
     def __str__(self):
         s = "{}:\n".format(self.name)
@@ -133,8 +136,10 @@ class EntityTemplate(object):
 
     @property
     def interfaces(self):
+        TOSCAException.set_context("relationship", self.name)
         if self._interfaces is None:
             self._interfaces = self._create_interfaces()
+        TOSCAException.reset_context()
         return self._interfaces
 
     @property
@@ -196,8 +201,10 @@ class EntityTemplate(object):
         return capability
 
     def _validate_properties(self, template, entitytype):
+        TOSCAException.set_context("properties", self.name)
         properties = entitytype.get_value(self.PROPERTIES, template)
         self._common_validate_properties(entitytype, properties)
+        TOSCAException.reset_context()
 
     def _validate_capabilities(self):
         type_capabilities = self.type_definition.get_capabilities()
@@ -206,9 +213,11 @@ class EntityTemplate(object):
         capabilities = self.type_definition.get_value(self.CAPABILITIES,
                                                       self.entity_tpl)
         if capabilities:
+            TOSCAException.set_context("capabilities", self.name)
             self._common_validate_field(capabilities, allowed_caps,
                                         'capabilities')
             self._validate_capabilities_properties(capabilities)
+        TOSCAException.reset_context()
 
     def _validate_capabilities_properties(self, capabilities):
         log.debug("Capabilities: {}".format(capabilities))
