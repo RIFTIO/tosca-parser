@@ -41,6 +41,9 @@ class Input(object):
         self._validate_field()
         self.validate_type(self.type)
 
+    def __str__(self):
+        return "{} (type: {}, default: {})".format(self.name, self.type, self.default)
+
     @property
     def type(self):
         return self.schema.type
