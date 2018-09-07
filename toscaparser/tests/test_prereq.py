@@ -14,6 +14,7 @@ import os
 import shutil
 import zipfile
 
+from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import URLException
 from toscaparser.common.exception import ValidationError
 from toscaparser.prereq.csar import CSAR
@@ -25,6 +26,10 @@ from toscaparser.utils.gettextutils import _
 class CSARPrereqTest(TestCase):
 
     base_path = os.path.dirname(os.path.abspath(__file__))
+
+    def setUp(self):
+        TestCase.setUp(self)
+        ExceptionCollector.stop()  # Added as sometimes negative testcases fails.
 
     def test_file_exists(self):
         path = os.path.join(self.base_path, "data/CSAR/csar_not_there.zip")

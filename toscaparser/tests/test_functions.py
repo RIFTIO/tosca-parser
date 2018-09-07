@@ -28,6 +28,10 @@ class IntrinsicFunctionsTest(TestCase):
               'db_root_pwd': '12345678'}
     tosca = ToscaTemplate(tosca_tpl, parsed_params=params)
 
+    def setUp(self):
+        TestCase.setUp(self)
+        exception.ExceptionCollector.stop()  # Added as sometimes negative testcases fails.
+
     def _get_node(self, node_name, tosca=None):
         if tosca is None:
             tosca = self.tosca

@@ -23,6 +23,10 @@ from toscaparser.utils import yamlparser
 
 class PropertyTest(TestCase):
 
+    def setUp(self):
+        TestCase.setUp(self)
+        exception.ExceptionCollector.stop()  # Added as sometimes negative testcases fails.
+
     def test_type(self):
         test_property_schema = {'type': 'string'}
         propertyInstance = Property('test_property', 'Hughes',

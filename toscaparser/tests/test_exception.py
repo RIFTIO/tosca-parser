@@ -19,6 +19,7 @@ class ExceptionTest(TestCase):
 
     def setUp(self):
         super(TestCase, self).setUp()
+        exception.ExceptionCollector.stop()
         exception.TOSCAException.set_fatal_format_exception(False)
 
     def test_message(self):

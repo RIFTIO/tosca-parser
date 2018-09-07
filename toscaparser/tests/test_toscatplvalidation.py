@@ -31,6 +31,10 @@ import toscaparser.utils.yamlparser
 
 class ToscaTemplateValidationTest(TestCase):
 
+    def setUp(self):
+        TestCase.setUp(self)
+        exception.ExceptionCollector.stop()  # Added as sometimes negative testcases fails.
+
     def test_well_defined_template(self):
         tpl_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),

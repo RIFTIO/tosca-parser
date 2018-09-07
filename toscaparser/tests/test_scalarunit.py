@@ -22,6 +22,10 @@ from toscaparser.utils import yamlparser
 
 class ScalarUnitPositiveTest(TestCase):
 
+    def setUp(self):
+        TestCase.setUp(self)
+        exception.ExceptionCollector.stop()  # Added as sometimes negative testcases fails.
+
     scenarios = [
         (
             # tpl_snippet with mem_size given as number+space+MB

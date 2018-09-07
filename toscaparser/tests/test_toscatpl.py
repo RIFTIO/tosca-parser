@@ -40,6 +40,10 @@ class ToscaTemplateTest(TestCase):
         os.path.dirname(os.path.abspath(__file__)),
         "data/repositories/tosca_repositories_test_definition.yaml")
 
+    def setUp(self):
+        TestCase.setUp(self)
+        exception.ExceptionCollector.stop()  # Added as sometimes negative testcases fails.
+
     def test_version(self):
         self.assertEqual(self.tosca.version, "tosca_simple_yaml_1_0")
 

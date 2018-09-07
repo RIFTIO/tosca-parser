@@ -28,6 +28,7 @@ class TopologyTemplateTest(TestCase):
 
     def setUp(self):
         TestCase.setUp(self)
+        exception.ExceptionCollector.stop()  # Added as sometimes negative testcases fails.
         '''TOSCA template.'''
         self.tosca_tpl_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),

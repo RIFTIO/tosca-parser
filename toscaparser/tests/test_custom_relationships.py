@@ -12,6 +12,7 @@
 
 import os
 
+from toscaparser.common import exception
 from toscaparser.tests.base import TestCase
 from toscaparser.tosca_template import ToscaTemplate
 
@@ -23,6 +24,10 @@ class CustomRelationshipTypesTest(TestCase):
         os.path.dirname(os.path.abspath(__file__)),
         "data/relationship/test_custom_relationship.yaml")
     tosca = ToscaTemplate(tosca_tpl)
+
+    def setUp(self):
+        TestCase.setUp(self)
+        exception.ExceptionCollector.stop()  # Added as sometimes negative testcases fails.
 
     def test_version(self):
         self.assertEqual(self.tosca.version, "tosca_simple_yaml_1_0")

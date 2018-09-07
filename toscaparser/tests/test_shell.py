@@ -28,6 +28,10 @@ class ShellTest(TestCase):
         os.path.dirname(os.path.abspath(__file__)),
         "data/test_multiple_validation_errors.yaml")
 
+    def setUp(self):
+        TestCase.setUp(self)
+        exception.ExceptionCollector.stop()  # Added as sometimes negative testcases fails.
+
     def test_missing_arg(self):
         self.assertRaises(SystemExit, shell.main, '')
 
