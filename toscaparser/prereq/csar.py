@@ -25,6 +25,7 @@ from toscaparser.common.exception import ValidationError
 from toscaparser.imports import ImportsLoader
 from toscaparser.utils.gettextutils import _
 from toscaparser.utils.urlutils import UrlUtils
+from toscaparser.functions import is_function
 
 try:  # Python 2.x
     from BytesIO import BytesIO
@@ -259,6 +260,9 @@ class CSAR(object):
         considering base folder (self.temp_dir) and tpl_file.
         Note that in a CSAR resource_file cannot be an absolute path.
         """
+        if is_function(resource_file):
+            # Cannot validate it at this time
+            return
         if UrlUtils.validate_url(resource_file):
             msg = (_('The resource at "%s" cannot be accessed.') %
                    resource_file)

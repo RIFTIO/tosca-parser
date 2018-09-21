@@ -10,9 +10,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
+
+from toscaparser.common import exception
 from toscaparser.dataentity import DataEntity
 from toscaparser.elements.constraints import Schema
 from toscaparser.functions import is_function
+
+log = logging.getLogger('tosca-parser')
 
 
 class Property(object):
@@ -63,13 +68,18 @@ class Property(object):
     def validate(self):
         '''Validate if not a reference property.'''
         if not is_function(self.value):
-            if self.type == Schema.STRING:
-                self.value = str(self.value)
-            self.value = DataEntity.validate_datatype(self.type, self.value,
-                                                      self.entry_schema,
-                                                      self.custom_def,
-                                                      self.name)
-            self._validate_constraints()
+            try:
+                if self.type == Schema.STRING:
+                    self.value = str(self.value)
+                self.value = DataEntity.validate_datatype(self.type, self.value,
+                                                        self.entry_schema,
+                                                        self.custom_def,
+                                                        self.name)
+                self._validate_constraints()
+            except Exception as e:
+                log.error("Property error {}: {}".format(self.name, e))
+                if exception.ExceptionCollector.collecting is False:
+                    raise e
 
     def _validate_constraints(self):
         if self.constraints:

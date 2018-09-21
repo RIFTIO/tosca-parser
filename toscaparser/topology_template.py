@@ -68,26 +68,32 @@ class TopologyTemplate(object):
         for name, attrs in self._tpl_inputs().items():
             log.debug("Input {}: {}".format(name, attrs))
             exception.TOSCAException.set_context("input", name)
-            input = Input(name, attrs, self.custom_defs)
-            if self.parsed_params and name in self.parsed_params:
-                input.validate(self.parsed_params[name])
-            else:
-                log.debug("Not found in parsed params: {}".
-                          format(self.parsed_params))
-                default = input.default
-                if default:
-                    input.validate(default)
-            if (self.parsed_params and input.name not in self.parsed_params
-                or self.parsed_params is None) and input.required \
-                    and input.default is None:
-                log.error(_('The required parameter %s '
-                              'is not provided') % input.name)
-                exception.ExceptionCollector.appendException(
-                    exception.MissingRequiredParameterError(
-                        what='Template',
-                        input_name=input.name))
+            try:
+                input = Input(name, attrs, self.custom_defs)
+                if self.parsed_params and name in self.parsed_params:
+                    input.validate(self.parsed_params[name])
+                else:
+                    log.debug("Not found in parsed params: {}".
+                            format(self.parsed_params))
+                    default = input.default
+                    if default:
+                        input.validate(default)
+                if (self.parsed_params and input.name not in self.parsed_params
+                    or self.parsed_params is None) and input.required \
+                        and input.default is None:
+                    log.error(_('The required parameter %s '
+                                'is not provided') % input.name)
+                    exception.ExceptionCollector.appendException(
+                        exception.MissingRequiredParameterError(
+                            what='Template',
+                            input_name=input.name))
 
-            inputs.append(input)
+                inputs.append(input)
+            except Exception as e:
+                log.error(_("Error in parsing input {}: {}").format(name, e))
+                if exception.ExceptionCollector.collecting is False:
+                    raise e
+
         exception.TOSCAException.reset_context()
         return inputs
 

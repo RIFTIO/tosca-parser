@@ -20,6 +20,7 @@ from toscaparser.common.exception import ExceptionCollector
 from toscaparser.common.exception import InvalidTemplateVersion
 from toscaparser.common.exception import MissingRequiredFieldError
 from toscaparser.common.exception import MissingRequiredInputError
+from toscaparser.common.exception import MissingDefaultValueError
 from toscaparser.common.exception import MissingRequiredOutputError
 from toscaparser.common.exception import MissingRequiredParameterError
 from toscaparser.common.exception import UnknownFieldError
@@ -351,9 +352,12 @@ class ToscaTemplate(object):
             ExceptionCollector.removeException(
                 MissingRequiredParameterError)
             ExceptionCollector.removeException(
+                MissingDefaultValueError)
+            ExceptionCollector.removeException(
                 MissingRequiredInputError)
             ExceptionCollector.removeException(
                 MissingRequiredOutputError)
+
         if ExceptionCollector.exceptionsCaught():
             if self.input_path:
                 exceptions = ValidationError(

@@ -55,6 +55,7 @@ ChangeLog
 .*.swp
 .idea
 *.iml
+.vscode
 
 # OSX
 .DS_Store
