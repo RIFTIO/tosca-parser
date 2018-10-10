@@ -186,7 +186,7 @@ class NodeTemplate(EntityTemplate):
             for relation, node in self.type_definition.relationship.items():
                 for tpl in self.templates:
                     if tpl == node.type:
-                        self.related[NodeTemplate(tpl)] = relation
+                        self.related[NodeTemplate(self.name, tpl)] = relation
         return self.related.keys()
 
     def validate(self, tosca_tpl=None):

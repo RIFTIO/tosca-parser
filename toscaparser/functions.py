@@ -31,6 +31,7 @@ GET_PROPERTY = 'get_property'
 GET_ATTRIBUTE = 'get_attribute'
 GET_INPUT = 'get_input'
 GET_OPERATION_OUTPUT = 'get_operation_output'
+GET_ARTIFACT = 'get_artifact'
 CONCAT = 'concat'
 TOKEN = 'token'
 
@@ -730,6 +731,98 @@ class GetOperationOutput(Function):
         return self
 
 
+class GetArtifact(Function):
+    """Get an artifact of an entity defined in the same service template.
+
+    Arguments:
+
+    * Node template name | SELF | HOST | SOURCE | TARGET.
+    * artifact name.
+    * location | LOCAL_FILE
+    * remove
+
+    Examples:
+
+    * { get_artifact: [ SELF, sw_image ] }
+    """
+
+    def result(self):
+        return self.artifact
+
+    def validate(self):
+        if len(self.args) < 2:
+            ExceptionCollector.appendException(
+                ValueError(_('Illegal arguments for function "{0}". Expected '
+                             'arguments: "node-template-name", "req-or-cap"'
+                             '(optional), "property name"'
+                             ).format(GET_ATTRIBUTE)))
+            return
+        elif len(self.args) >= 2:
+            node_tpl = self._find_node_template(self.args[0])
+        if node_tpl is None:
+            return
+        # TODO: Check additonal args in get_artifact
+        self.artifact = self._artifact_in_node(node_tpl)
+        if self.artifact is None:
+            ExceptionCollector.appendException(
+                KeyError(_('Artifact "%(att)s" was not found in node '
+                           'template "%(ntpl)s".') %
+                         {'att': self.args[1],
+                          'ntpl': node_tpl.name}))
+
+    def _artifact_in_node(self, node_tpl):
+        artifacts = node_tpl.artifacts
+        found = [artifacts[self.args[1]]] \
+            if self.args[1] in artifacts else []
+        return found
+
+    def _find_node_template(self, node_template_name):
+        if node_template_name == HOST:
+            # Currently this is the only way to tell whether the function
+            # is used within the outputs section of the TOSCA template.
+            if isinstance(self.context, list):
+                ExceptionCollector.appendException(
+                    ValueError(_(
+                        '"get_attribute: [ HOST, ... ]" is not allowed in '
+                        '"outputs" section of the TOSCA template.')))
+                return
+            node_tpl = self._find_host_containing_attribute()
+            if not node_tpl:
+                ExceptionCollector.appendException(
+                    ValueError(_(
+                        '"get_attribute: [ HOST, ... ]" was used in node '
+                        'template "{0}" but "{1}" was not found in '
+                        'the relationship chain.').format(self.context.name,
+                                                          HOSTED_ON)))
+                return
+            return node_tpl
+        if node_template_name == TARGET:
+            if not isinstance(self.context.type_definition, RelationshipType):
+                ExceptionCollector.appendException(
+                    KeyError(_('"TARGET" keyword can only be used in context'
+                               ' to "Relationships" target node')))
+                return
+            return self.context.target
+        if node_template_name == SOURCE:
+            if not isinstance(self.context.type_definition, RelationshipType):
+                ExceptionCollector.appendException(
+                    KeyError(_('"SOURCE" keyword can only be used in context'
+                               ' to "Relationships" source node')))
+                return
+            return self.context.source
+        name = self.context.name \
+            if node_template_name == SELF and \
+            not isinstance(self.context, list) \
+            else node_template_name
+        for node_template in self.tosca_tpl.nodetemplates:
+            if node_template.name == name:
+                return node_template
+        ExceptionCollector.appendException(
+            KeyError(_(
+                'Node template "{0}" was not found.'
+            ).format(node_template_name)))
+
+
 class Concat(Function):
     """Validate the function and provide an instance of the function
 
@@ -809,6 +902,7 @@ function_mappings = {
     GET_INPUT: GetInput,
     GET_ATTRIBUTE: GetAttribute,
     GET_OPERATION_OUTPUT: GetOperationOutput,
+    GET_ARTIFACT: GetArtifact,
     CONCAT: Concat,
     TOKEN: Token
 }
