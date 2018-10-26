@@ -237,15 +237,16 @@ class SubstitutionMappings(object):
     def _validate_requirements(self):
         """validate the requirements of substitution mappings."""
 
-        # The requirements must be in node template wchich be mapped.
+        # The requirements must be in node template which is mapped.
         tpls_requirements = self.sub_mapping_def.get(self.REQUIREMENTS)
         node_requirements = self.sub_mapped_node_template.requirements \
             if self.sub_mapped_node_template else None
         log.debug("tpls req: {}, node req: {}".format(tpls_requirements, node_requirements))
-        for req in node_requirements if node_requirements else []:
+
+        def process_req(req):
             log.debug("Node requirements: {}".format(req))
             if tpls_requirements:
-                keys = [];
+                keys = []
                 if isinstance(tpls_requirements, list):
                     for tp in tpls_requirements:
                         keys.extend(list(tp.keys()))
@@ -260,6 +261,17 @@ class SubstitutionMappings(object):
                         ExceptionCollector.appendException(
                             UnknownFieldError(what='SubstitutionMappings',
                                               field=req))
+
+        if isinstance(node_requirements, dict) or not node_requirements:
+            for req in node_requirements if node_requirements else {}:
+                process_req({req: node_requirements[req]})
+        elif isinstance(node_requirements, list):
+            for req in node_requirements:
+                process_req(req)
+        else:
+            ExceptionCollector.appendException(
+                UnknownFieldError(what='SubstitutionMappings',
+                                  field='Requirements is not list or dict'))
 
     def _validate_outputs(self):
         """validate the outputs of substitution mappings.

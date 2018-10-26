@@ -46,7 +46,13 @@ class InterfacesDef(StatefulEntityType):
         if hasattr(self.ntype, 'interfaces') \
            and self.ntype.interfaces \
            and interfacetype in self.ntype.interfaces:
-            interfacetype = self.ntype.interfaces[interfacetype]['type']
+            if 'type' in self.ntype.interfaces[interfacetype]:
+                interfacetype = self.ntype.interfaces[interfacetype]['type']
+            else:
+                for intf, defn in self.ntype.parent_type.interfaces.items():
+                    if intf == interfacetype:
+                        interfacetype = defn['type']
+
         if node_type:
             if self.node_template and self.node_template.custom_def \
                and interfacetype in self.node_template.custom_def:

@@ -44,7 +44,7 @@ class ImportsLoader(object):
             ExceptionCollector.appendException(ValidationError(message=msg))
         self.path = path
         self.repositories = {}
-        if tpl and tpl.get('repositories'):
+        if tpl:
             self.repositories = tpl.get('repositories')
         self.type_definition_list = []
         if type_definition_list:
@@ -72,6 +72,27 @@ class ImportsLoader(object):
             ExceptionCollector.appendException(ValidationError(message=msg))
             return
 
+        def update_import_entry(fpath, defs):
+            if 'imports' in defs:
+                dirname = os.path.dirname(fpath)
+                imports = []
+                for f in defs['imports']:
+                    if isinstance(f, dict):
+                        imp = f
+                        if 'file' in imp:
+                            fn = imp['file']
+                            if fn.startswith('http') is False:
+                                dname = os.path.dirname(fn)
+                                imp['file'] = os.path.abspath(os.path.join(
+                                    dirname, dname, os.path.basename(fn)))
+                        imports.append(imp)
+                    else:
+                        dname = os.path.dirname(f)
+                        fn = os.path.abspath(os.path.join(
+                            dirname, dname, os.path.basename(f)))
+                        imports.append(fn)
+                return imports
+
         for import_def in self.importslist:
             if isinstance(import_def, dict):
                 for import_name, import_uri in import_def.items():
@@ -91,6 +112,9 @@ class ImportsLoader(object):
                         namespace_prefix = import_uri.get(
                             self.NAMESPACE_PREFIX)
                     if custom_type:
+                        imp = update_import_entry(full_file_name, custom_type)
+                        if imp:
+                            custom_type['imports'] = imp
                         TypeValidation(custom_type, import_def)
                         self._update_custom_def(custom_type, namespace_prefix)
             else:  # old style of imports
@@ -98,6 +122,9 @@ class ImportsLoader(object):
                 full_file_name, custom_type = self._load_import_template(
                     None, import_def)
                 if custom_type:
+                    imp = update_import_entry(full_file_name, custom_type)
+                    if imp:
+                        custom_type['imports'] = imp
                     TypeValidation(
                         custom_type, import_def)
                     self._update_custom_def(custom_type, None)
@@ -122,9 +149,12 @@ class ImportsLoader(object):
                                                        "." + type_def_key)
                             prefix_custom_types[namespace_prefix_to_key] = \
                                 outer_custom_types[type_def_key]
-                        self.custom_defs.update(prefix_custom_types)
+                        custom_types = prefix_custom_types
                     else:
-                        self.custom_defs.update(outer_custom_types)
+                        custom_types = outer_custom_types
+
+                    # Update the definitions with more checks
+                    self.custom_defs.update(custom_types)
 
     def _update_nested_tosca_tpls(self, full_file_name, custom_tpl):
         if full_file_name and custom_tpl:
@@ -174,8 +204,8 @@ class ImportsLoader(object):
             self._validate_import_keys(import_name, import_uri_def)
             file_name = import_uri_def.get(self.FILE)
             repository = import_uri_def.get(self.REPOSITORY)
-            repos = self.repositories.keys()
             if repository is not None:
+                repos = self.repositories.keys()
                 if repository not in repos:
                     ExceptionCollector.appendException(
                         InvalidPropertyValueError(
