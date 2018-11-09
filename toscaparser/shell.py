@@ -68,17 +68,17 @@ class ParserShell(object):
         parser.add_argument('-nrpv', dest='no_required_paras_check',
                             action='store_true', default=False,
                             help=_('Ignore input parameter validation '
-                                   'when parse template.'))
+                                   'when parsing template.'))
 
         parser.add_argument('--debug', dest='debug_mode',
                             action='store_true', default=False,
-                            help=_('debug mode for print more details '
+                            help=_('Debug mode to print lot of details '
                                    'other than raise exceptions when '
-                                   'errors happen as possible'))
+                                   'errors happen'))
 
         parser.add_argument('--verbose', dest='verbose',
                             action='store_true', default=False,
-                            help=_('verbose mode for print more details '
+                            help=_('Verbose mode to print more details '
                                    'when raising exceptions as '
                                    'errors happen.'))
 

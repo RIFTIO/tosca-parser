@@ -1,0 +1,33 @@
+metadata:
+vnf_product_name: SunshineDB
+vnf_provider_id: Mycompany
+vnf_package_version: 4.0
+vnf_release_data_time: 2018.01.01T10:00+01:00
+
+Source: sunshinedb.yaml
+Algorithm: sha-256
+Hash: c339213522e5e271dcb0ee0d940075f6a6deb042ea2faced821e22667b015e30
+
+Source: Definitions/etsi_nfv_sol001_vnfd_0_10_0_types.yaml
+Algorithm: sha-256
+Hash: 0405bc0f71e08b4d94d452e64bf8bde60063cf0a89dc39999ee8f1a4c5465ec7
+
+Source: Scripts/install.sh
+Algorithm: sha-256
+Hash: a531066ba5340c0af7f7edb8dfae1131df127f9ee01941389c63bcb520eb3678
+
+Source: Scripts/db_backend_cloud_init.cfg
+Algorithm: sha-256
+Hash: 9d205bff1ac1714018085c8977c9dd9b0a4bf81e44d425d2152ee1b6c8ee9bd9
+
+Source: Files/maria.db.image.v1.0.qcow2
+Algorithm: md5
+Hash: d41d8cd98f00b204e9800998ecf8427e
+
+Source: Files/maria.db.backup.v1.0.qcow2
+Algorithm: md5
+Hash: d41d8cd98f00b204e9800998ecf8427e
+
+Source: Files/ChangeLog.txt
+Algorithm: sha-256
+Hash: d0b4f9120ba026c00fa23cb84b4e1620a2e6436592e58155a5151653179572c0

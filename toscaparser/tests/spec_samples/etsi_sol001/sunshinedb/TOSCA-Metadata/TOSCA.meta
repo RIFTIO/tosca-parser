@@ -1,0 +1,8 @@
+TOSCA-Meta-File-Version: 1.0
+CSAR-Version: 1.1
+Created-by: Onboarding portal
+Entry-Definitions: Definitions/sunshinedb.yaml
+Entry-Manifest: sunshinedb.mf
+Entry-Change-Log: Files/ChangeLog.txt
+Entry-Tests: Files/Tests
+Entry-Licenses: Files/Licenses

@@ -1,0 +1,272 @@
+tosca_definitions_version: tosca_simple_yaml_1_2
+
+description: Relational database cluster (non-scalable)
+
+imports:
+  - etsi_nfv_sol001_vnfd_0_10_0_types.yaml
+
+dsl_definitions:
+  descriptor_id: &descriptor_id b1bb0ce7-ebca-4fa7-95ed-4840d70a1177
+  provider: &provider Mycompany
+  product_name: &product_name SunshineDB
+  software_version: &software_version '1.0'
+  descriptor_version: &descriptor_version '1.0'
+  flavour_id: &flavour_id simple
+  flavour_description: &flavour_description simple deployment
+  vnfm: &vnfm Mycompany
+
+node_types:
+  mycompany.nodes.nfv.SunshineDB.1_0.1_0:
+    derived_from: tosca.nodes.nfv.VNF
+    properties:
+      descriptor_id:
+        type: string
+        constraints: [ valid_values: [ *descriptor_id ] ]
+        default: *descriptor_id
+      provider:
+        type: string
+        constraints: [ valid_values: [ *provider ] ]
+        default: *provider
+      product_name:
+        type: string
+        constraints: [ valid_values: [ *product_name ] ]
+        default: *product_name
+      software_version:
+        type: string
+        constraints: [ valid_values: [ *software_version ] ]
+        default: *software_version
+      descriptor_version:
+        type: string
+        constraints: [ valid_values: [ *descriptor_version ] ]
+        default: *descriptor_version
+      flavour_id:
+        type: string
+        constraints: [ valid_values: [ *flavour_id ] ]
+        default: *flavour_id
+      flavour_description:
+        type: string
+        constraints: [ valid_values: [ *flavour_description ] ]
+        default: *flavour_description
+      vnfm_info:
+        type: list
+        entry_schema:
+          type: string
+        constraints: [ valid_values: [ *vnfm ] ]
+        default: [ *vnfm ]
+      modifiable_attributes:
+        type: mycompany.datatypes.nfv.VnfInfoModifiableAttributes
+        required: false
+    interfaces:
+      Vnflcm:
+        instantiate:
+          inputs:
+            additional_parameters:
+              type: mycompany.datatypes.nfv.InstantiateAdditionalParameters
+              required: true
+        terminate:
+
+data_types:
+  mycompany.datatypes.nfv.VnfInfoModifiableAttributes:
+    derived_from: tosca.datatypes.nfv.VnfInfoModifiableAttributes
+    properties:
+      extensions:
+        type: mycompany.datatypes.nfv.VnfInfoModifiableAttributesExtensions
+        required: false
+
+  mycompany.datatypes.nfv.VnfInfoModifiableAttributesExtensions:
+    derived_from: tosca.datatypes.nfv.VnfInfoModifiableAttributesExtensions
+    properties:
+      http_proxy:
+        type: string
+        required: true
+      https_proxy:
+        type: string
+        required: false
+
+  mycompany.datatypes.nfv.InstantiateAdditionalParameters:
+    derived_from: tosca.datatypes.nfv.VnfOperationAdditionalParameters
+    properties:
+      parameter_1:
+        type: string
+        required: true
+      parameter_2:
+        type: string
+        required: false
+        default: value_2
+
+topology_template:
+  inputs:
+    modifiable_attributes:
+      type: mycompany.datatypes.nfv.VnfInfoModifiableAttributes
+
+  substitution_mappings:
+    node_type: mycompany.nodes.nfv.SunshineDB.1_0.1_0
+    requirements:
+      virtual_link: [ dbBackendCp, virtual_link ] # IPv4 for SQL
+
+  node_templates:
+    vnf:  # Should we move properties and interfaces also to substitution_mappings??
+      type: mycompany.nodes.nfv.SunshineDB.1_0.1_0
+      properties:
+        modifiable_attributes: { get_input: modifiable_attributes }
+      interfaces:
+        Vnflcm:
+          instantiate: ../Scripts/install.sh
+
+    dbBackend:
+      type: tosca.nodes.nfv.Vdu.Compute
+      properties:
+        name: DB backend
+        description: ..
+        vdu_profile:
+          min_number_of_instances: 1
+          max_number_of_instances: 8
+        sw_image_data:
+          name: Software of Maria Db
+          version: '1.0'
+          checksum: d41d8cd98f00b204e9800998ecf8427e
+          disk_format: qcow2
+          container_format: bare
+          min_disk: 2 GB
+          min_ram: 8096 MB
+          size: 2 GB
+          operating_system: Linux
+          supported_virtualisation_environments:
+            - KVM
+        boot_data: { get_artifact: [SELF, boot_data] }
+      capabilities:
+        virtual_compute:
+          properties:
+            virtual_memory:
+              virtual_mem_size: 8096 MB
+            virtual_cpu:
+              cpu_architecture: x86
+              num_virtual_cpu: 2
+              virtual_cpu_clock: 1800 MHz
+            virtual_local_storage:
+              - size_of_storage: 10 GB
+      requirements:
+        - virtual_storage: mariaDbStorage
+      artifacts:
+        sw_image:
+          type: tosca.artifacts.nfv.SwImage
+          file: ../Files/maria.db.image.v1.0.qcow2
+        boot_data:
+          type: tosca.artifacts.File
+          file: ../Scripts/db_backend_cloud_init.cfg
+
+    mariaDbStorage:
+      type: tosca.nodes.nfv.Vdu.VirtualBlockStorage
+      properties:
+        virtual_block_storage_data:
+          size_of_storage: 10 GB
+        sw_image_data:
+          name: Backup of Maria Db
+          version: '1.0'
+          checksum: d41d8cd98f00b204e9800998ecf8427e
+          disk_format: qcow2
+          container_format: bare
+          min_disk: 20 GB
+          min_ram: 8096 MB
+          size: 4 GB
+          operating_system: Linux
+          supported_virtualisation_environments:
+            - KVM
+      artifacts:
+        sw_image:
+          type: tosca.artifacts.nfv.SwImage
+          file: ../Files/maria.db.backup.v1.0.qcow2
+
+    dbBackendCp:
+      type: tosca.nodes.nfv.VduCp
+      properties:
+        description: External connection point to access the DB node on IPv4
+        layer_protocols:
+          - ipv4
+        role: leaf
+        protocol:
+          - associated_layer_protocol: ipv4
+        trunk_mode: false
+      requirements:
+        - virtual_binding: dbBackend
+
+    dbBackendInternalCp:
+      type: tosca.nodes.nfv.VduCp
+      properties:
+        description: Internal connection point for cluster communication
+        layer_protocols:
+          - ipv4
+        role: leaf
+        protocol:
+          - associated_layer_protocol: ipv4
+        trunk_mode: false
+      requirements:
+        - virtual_binding: dbBackend
+        - virtual_link: internalVl
+
+    internalVl:
+      type: tosca.nodes.nfv.VnfVirtualLink
+      properties:
+        connectivity_type:
+          layer_protocols:
+            - ipv4
+        vl_profile:
+          min_bitrate_requirements:
+            root: 100000000
+          max_bitrate_requirements:
+            root: 100000000
+          virtual_link_protocol_data:
+            - associated_layer_protocol: ipv4
+              l3_protocol_data:
+                name: data_vl
+                ip_version: ipv4
+                cidr: 0.0.0.0/0
+                ip_allocation_pools:
+                - start_ip_address: 10.110.120.2
+                  end_ip_address: 10.110.120.250
+                gateway_ip: 10.110.120.1
+                dhcp_enabled: true
+
+  groups:
+    dbBackendLocalPlacement:
+      type: tosca.groups.nfv.PlacementGroup
+      members: [ dbBackend ]
+
+  policies:
+    - dbBackendLocalAffinity:
+        type: tosca.policies.nfv.AffinityRule
+        properties:
+          scope: nfvi_pop
+        targets: [ dbBackendLocalPlacement ]
+
+    - dbBackendLocalAntiAffinity:
+        type: tosca.policies.nfv.AntiAffinityRule
+        properties:
+          scope: nfvi_node
+        targets: [ dbBackendLocalPlacement ]
+
+    - instantiationLevels:
+        type: tosca.policies.nfv.InstantiationLevels
+        properties:
+          levels:
+            small:
+              description: DB nodes in cluster
+          default_level: small
+
+    - dbBackendInstantiationLevels:
+        type: tosca.policies.nfv.VduInstantiationLevels
+        properties:
+          levels:
+            small:
+              number_of_instances: 3
+        targets: [ dbBackend ]
+
+    - dbBackendCpSecurityGroupRuleIngress:
+        type: tosca.policies.nfv.SecurityGroupRule
+        properties:
+          direction: ingress
+          ether_type: ipv4
+          protocol: tcp
+          port_range_min: 3306
+          port_range_max: 3306
+        targets: [ dbBackendCp ]
