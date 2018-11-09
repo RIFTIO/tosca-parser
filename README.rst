@@ -11,11 +11,11 @@ for supporting ETSI SOL001.
 
 How To Use
 ----------
-Please refer to `doc/source/usage.rst <https://github.com/RIFTIO/rw-tosca-parser/blob/master/doc/source/usage.rst>`_
+Please refer to `doc/source/usage.rst <https://github.com/RIFTIO/tosca-parser/blob/master/doc/source/usage.rst>`_
 
 Project Info
 ------------
 
 * License: Apache License, Version 2.0
-* Source: https://github.com/RIFTIO/rw-tosca-parser
+* Source: https://github.com/RIFTIO/tosca-parser
 
