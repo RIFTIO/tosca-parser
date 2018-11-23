@@ -453,9 +453,11 @@ class ValidValues(Constraint):
                                              'expects a list.')))
 
     def _is_valid(self, value):
-        if isinstance(value, list):
+        if value in self.constraint_value:
+            return True
+        elif isinstance(value, list):
             return all(v in self.constraint_value for v in value)
-        return value in self.constraint_value
+        return False
 
     def _err_msg(self, value):
         allowed = '[%s]' % ', '.join(str(a) for a in self.constraint_value)

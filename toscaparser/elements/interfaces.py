@@ -11,6 +11,7 @@
 #    under the License.
 
 from toscaparser.common.exception import ExceptionCollector
+from toscaparser.common.exception import TypeNotProvidedError
 from toscaparser.common.exception import UnknownFieldError
 from toscaparser.elements.statefulentitytype import StatefulEntityType
 
@@ -49,9 +50,24 @@ class InterfacesDef(StatefulEntityType):
             if 'type' in self.ntype.interfaces[interfacetype]:
                 interfacetype = self.ntype.interfaces[interfacetype]['type']
             else:
-                for intf, defn in self.ntype.parent_type.interfaces.items():
-                    if intf == interfacetype:
-                        interfacetype = defn['type']
+                # In case of interfaces, the type need not be defined on the interfaces
+                # in the inherited types. So take the type from parent node iterface defn.
+                ty = self.ntype.parent_type
+                while True:
+                    ty = ty.parent_type
+                    found = False
+                    if not ty:
+                        ExceptionCollector.appendException(
+                            TypeNotProvidedError(what=interfacetype))
+                        break
+                    for intf, defn in ty.interfaces.items():
+                        if intf == interfacetype:
+                            if 'type' in defn:
+                                interfacetype = defn['type']
+                                found = True
+                                break
+                    if found:
+                        break
 
         if node_type:
             if self.node_template and self.node_template.custom_def \

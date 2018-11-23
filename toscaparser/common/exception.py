@@ -112,6 +112,10 @@ class InvalidTypeError(TOSCAException):
     msg_fmt = _('Type "%(what)s" is not a valid type.')
 
 
+class TypeNotProvidedError(TOSCAException):
+    msg_fmt = _('Entity "%(what)s" type is not provided.')
+
+
 class InvalidTypeAdditionalRequirementsError(TOSCAException):
     msg_fmt = _('Additional requirements for type "%(type)s" not met.')
 
