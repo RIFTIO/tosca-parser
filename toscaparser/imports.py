@@ -46,6 +46,9 @@ class ImportsLoader(object):
         self.repositories = {}
         if tpl:
             self.repositories = tpl.get('repositories')
+        self.version = TypeValidation.STANDARD_TEMPLATE_VERSIONS[-1]
+        if tpl:
+            self.version = tpl[TypeValidation.DEFINITION_VERSION]
         self.type_definition_list = []
         if type_definition_list:
             if isinstance(type_definition_list, list):
@@ -95,28 +98,38 @@ class ImportsLoader(object):
 
         for import_def in self.importslist:
             if isinstance(import_def, dict):
-                for import_name, import_uri in import_def.items():
-                    log.debug("Import {}: {}".format(import_name, import_uri))
-                    if import_name in imports_names:
-                        msg = (_('Duplicate import name "%s" was found.') %
-                               import_name)
-                        log.error(msg)
-                        ExceptionCollector.appendException(
-                            ValidationError(message=msg))
-                    imports_names.add(import_name)
+                full_file_name, custom_type, namespace_prefix = None, None, None
+                if self.version == TypeValidation.STANDARD_TEMPLATE_VERSIONS[0] or \
+                self.version not in TypeValidation.STANDARD_TEMPLATE_VERSIONS:
+                    # Assume tosca_simple_yaml_1_0 import format
+                    for import_name, import_uri in import_def.items():
+                        log.debug("Import {}: {}".format(import_name, import_uri))
+                        if import_name in imports_names:
+                            msg = (_('Duplicate import name "%s" was found.') %
+                                import_name)
+                            log.error(msg)
+                            ExceptionCollector.appendException(
+                                ValidationError(message=msg))
+                        imports_names.add(import_name)
 
+                        full_file_name, custom_type = self._load_import_template(
+                            import_name, import_uri)
+                        if isinstance(import_uri, dict):
+                            namespace_prefix = import_uri.get(
+                                self.NAMESPACE_PREFIX)
+                else:
                     full_file_name, custom_type = self._load_import_template(
-                        import_name, import_uri)
-                    namespace_prefix = None
-                    if isinstance(import_uri, dict):
-                        namespace_prefix = import_uri.get(
-                            self.NAMESPACE_PREFIX)
-                    if custom_type:
-                        imp = update_import_entry(full_file_name, custom_type)
-                        if imp:
-                            custom_type['imports'] = imp
-                        TypeValidation(custom_type, import_def)
-                        self._update_custom_def(custom_type, namespace_prefix)
+                        None, import_def)
+                    namespace_prefix = import_def.get(
+                        self.NAMESPACE_PREFIX)
+
+                if custom_type:
+                    imp = update_import_entry(full_file_name, custom_type)
+                    if imp:
+                        custom_type['imports'] = imp
+                    TypeValidation(custom_type, import_def)
+                    self._update_custom_def(custom_type, namespace_prefix)
+
             else:  # old style of imports
                 log.debug("Import old style: {}".format(import_def))
                 full_file_name, custom_type = self._load_import_template(
