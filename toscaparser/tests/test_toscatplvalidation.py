@@ -296,10 +296,12 @@ class ToscaTemplateValidationTest(TestCase):
         self.assertTrue(input2.required)
         toscaparser.utils.yamlparser.simple_parse(tpl_snippet3)['inputs']
 
-    def _imports_content_test(self, tpl_snippet, path, custom_type_def):
+    def _imports_content_test(self, tpl_snippet, path, custom_type_def, tpl=None):
         imports = (toscaparser.utils.yamlparser.
                    simple_parse(tpl_snippet)['imports'])
-        loader = ImportsLoader(imports, path, custom_type_def)
+        if tpl is None and path is not None:
+            tpl = {"tosca_definitions_version": "tosca_simple_yaml_1_0"}
+        loader = ImportsLoader(imports, path, custom_type_def, tpl=tpl)
         return loader.get_custom_defs()
 
     def test_imports_without_templates(self):
@@ -359,6 +361,23 @@ tosca-parser/master/toscaparser/tests/data/custom_types/wordpress.yaml
         self.assertTrue(custom_defs.get("single_instance_wordpress.tosca."
                                         "nodes.WebApplication.WordPress"))
 
+    def test_imports_v2(self):
+        tpl_snippet = '''
+        imports:
+          - file: custom_types/paypalpizzastore_nodejs_app.yaml
+          - file: 'https://raw.githubusercontent.com/openstack/tosca-parser\
+/master/toscaparser/tests/data/custom_types/wordpress.yaml'
+            namespace_prefix: single_instance_wordpress
+        '''
+        path = 'toscaparser/tests/data/tosca_elk.yaml'
+        tpl = {"tosca_definitions_version": "tosca_simple_yaml_1_2"}
+        custom_defs = self._imports_content_test(tpl_snippet,
+                                                 path,
+                                                 "node_types",
+                                                 tpl=tpl)
+        self.assertTrue(custom_defs.get("single_instance_wordpress.tosca."
+                                        "nodes.WebApplication.WordPress"))
+
     def test_imports_wth_namespace_prefix(self):
         tpl_snippet = '''
         imports:
@@ -370,6 +389,20 @@ tosca-parser/master/toscaparser/tests/data/custom_types/wordpress.yaml
         custom_defs = self._imports_content_test(tpl_snippet,
                                                  path,
                                                  "node_types")
+        self.assertTrue(custom_defs.get("testprefix.Rsyslog"))
+
+    def test_imports_wth_namespace_prefix_v2(self):
+        tpl_snippet = '''
+        imports:
+          - file: custom_types/nested_rsyslog.yaml
+            namespace_prefix: testprefix
+        '''
+        path = 'toscaparser/tests/data/tosca_elk.yaml'
+        tpl = {"tosca_definitions_version": "tosca_simple_yaml_1_2"}
+        custom_defs = self._imports_content_test(tpl_snippet,
+                                                 path,
+                                                 "node_types",
+                                                 tpl=tpl)
         self.assertTrue(custom_defs.get("testprefix.Rsyslog"))
 
     def test_imports_with_no_main_template(self):
@@ -416,6 +449,23 @@ tosca-parser/master/toscaparser/tests/data/custom_types/wordpress.yaml
         err = self.assertRaises(exception.MissingRequiredFieldError,
                                 self._imports_content_test,
                                 tpl_snippet, path, None)
+        self.assertEqual(errormsg, err.__str__())
+
+    def test_imports_missing_req_field_in_def_v2(self):
+        tpl_snippet = '''
+        imports:
+          - file1: my_defns/my_typesdefs_n.yaml
+            repository: my_company_repo
+            namespace_uri: http://mycompany.com/ns/tosca/2.0
+            namespace_prefix: mycompany
+        '''
+        errormsg = _('Import of template "None" is missing '
+                     'required field "file".')
+        path = 'toscaparser/tests/data/tosca_elk.yaml'
+        tpl = {"tosca_definitions_version": "tosca_simple_yaml_1_2"}
+        err = self.assertRaises(exception.MissingRequiredFieldError,
+                                self._imports_content_test,
+                                tpl_snippet, path, None, tpl=tpl)
         self.assertEqual(errormsg, err.__str__())
 
     def test_imports_file_with_uri(self):
