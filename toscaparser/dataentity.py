@@ -116,8 +116,9 @@ class DataEntity(object):
                 DataEntity.validate_datatype(prop_schema.type, value,
                                              prop_schema.entry_schema,
                                              self.custom_def)
-                # check if field value meets constraints defined
-                if prop_schema.constraints:
+                # check if field value meets constraints defined if not a function
+                from toscaparser.functions import is_function
+                if prop_schema.constraints and is_function(value) is False:
                     for constraint in prop_schema.constraints:
                         if isinstance(value, list):
                             for val in value:

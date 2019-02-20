@@ -67,7 +67,7 @@ class Property(object):
 
     def validate(self):
         '''Validate if not a reference property.'''
-        if not is_function(self.value):
+        if is_function(self.value) is False:
             try:
                 if self.type == Schema.STRING:
                     self.value = str(self.value)
