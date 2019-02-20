@@ -285,16 +285,47 @@ class NodeTemplate(EntityTemplate):
         allowed_operations = []
         nodetype_iface_def = self.type_definition.interfaces[name]
         allowed_operations.extend(nodetype_iface_def.keys())
-        if 'type' in nodetype_iface_def:
-            iface_type = nodetype_iface_def['type']
+
+        # Handle cases where type is not defined in the derived node interface
+        if 'type' not in nodetype_iface_def:
+            node_type = self.type_definition.parent_type
+            while node_type.ntype != 'tosca.nodes.Root':
+                try:
+                    nodetype_iface_def = node_type.interfaces[name]
+                    if 'type' in nodetype_iface_def:
+                        break
+                    else:
+                        allowed_operations.extend(nodetype_iface_def.keys())
+                        node_type = node_type.parent_type
+                except Exception:
+                    node_type = node_type.parent_type
+            else:
+                ExceptionCollector.appendException(
+                    UnknownFieldError(
+                        what='"interfaces" of template "%s"' %
+                        self.name, field=name))
+
+        iface_type = nodetype_iface_def['type']
+        if iface_type in self.type_definition.custom_def:
+            iface_type_def = self.type_definition.custom_def[iface_type]
+        else:
+            iface_type_def = self.type_definition.TOSCA_DEF[iface_type]
+        allowed_operations.extend(iface_type_def.keys())
+
+        # Pickup operations from the parent types also
+        while 'derived_from' in iface_type_def:
+            iface_type = iface_type_def['derived_from']
+            if iface_type == 'tosca.interfaces.Root':
+                break
             if iface_type in self.type_definition.custom_def:
                 iface_type_def = self.type_definition.custom_def[iface_type]
             else:
                 iface_type_def = self.type_definition.TOSCA_DEF[iface_type]
             allowed_operations.extend(iface_type_def.keys())
+
         allowed_operations = [op for op in allowed_operations if
                               op not in INTERFACE_DEF_RESERVED_WORDS]
-        return allowed_operations
+        return list(set(allowed_operations))
 
     def _validate_fields(self, nodetemplate):
         for name in nodetemplate.keys():
