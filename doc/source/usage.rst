@@ -35,5 +35,4 @@ optional arguments:
 
 
 Sample ETSI SOL001 v0.10.0 package:
-     tosca-parser --template-file=toscaparser/tests/spec_samples/etsi_sol001/sunshinedb/sunshinedb.yaml -nrpv
-
+     tosca-parser --template-file=toscaparser/tests/spec_samples/etsi_sol001/sunshinedb/Definitions/sunshinedb.yaml -nrpv
