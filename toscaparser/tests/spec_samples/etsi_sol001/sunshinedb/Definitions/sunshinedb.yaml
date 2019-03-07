@@ -58,6 +58,7 @@ node_types:
         required: false
     interfaces:
       Vnflcm:
+        type: tosca.interfaces.nfv.Vnflcm
         instantiate:
           inputs:
             additional_parameters:
